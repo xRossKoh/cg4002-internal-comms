@@ -33,7 +33,7 @@ class BlunoBeetle:
         self.peripheral.withDelegate(self.delegate)
         services = self.peripheral.getServices()
         self.write_service = self.peripheral.getServiceByUUID(list(services)[self.write_service_id].uuid)
-        #self.three_way_handshake()
+        self.three_way_handshake()
 
     def disconnect(self):
         self.peripheral.disconnect()
@@ -49,9 +49,9 @@ class BlunoBeetle:
     
     def generate_default_packets(self):
         for i in range(3):
-            beetle_id = self.node_id
+            node_id = self.node_id
             packet_type = i
-            header = (beetle_id << 4) | (packet_type)
+            header = (node_id << 4) | packet_type
             data = [header, 0, 0, 0, 0, 0, 0, 0]
             data[7] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
@@ -74,16 +74,17 @@ class BlunoBeetle:
             print("Initiated 3-way handshake...")
 
             # busy wait for response from beetle
-
-            while not self.delegate.buffer_len >= 16:
-                continue
+            while self.delegate.buffer_len < 16:
+                if self.peripheral.waitForNotifications(0.0005):
+                    pass
 
             self.ble_packet.unpack(self.delegate.extract_buffer())
+            self.unpack_packet()
 
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
                 print("3-way handshake failed.")
-                break
+                continue
 
             # else reply with ack
             self.send_default_packet(PacketType.ACK)
@@ -104,12 +105,12 @@ class BlunoBeetle:
 
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
-            #self.send_default_packet(PacketType.ACK)
+            self.send_default_packet(PacketType.ACK)
             self.unpack_packet()
-        #else:
-            #self.send_default_packet(PacketType.NACK)
+        else:
+            self.send_default_packet(PacketType.NACK)
 
-        print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
+        #print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
 
     def wait_for_data(self):
         try:
