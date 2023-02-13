@@ -96,9 +96,6 @@ void generateDefaultPackets()
   int data[] = {0, 0, 0, 0, 0, 0};
   for (int i = 0; i < 3; i++)
   {
-//    incorrect casting
-//    BLEPacket p = generatePacket(PacketType(i), data);
-//    default_packets[i] = (byte*)&p;
     default_packets[i] = generatePacket(PacketType(i), data);
   }
 }
@@ -144,18 +141,19 @@ void setup() {
   threeWayHandshake();
 }
 
+// For IR data, a Stop-N-Wait protocol is used
+// For each packet that the Beetle sends, it awaits an acknowledgement from the laptop
 void loop() {
-  delay(5000);
+  delay(2000);
   int data[6];
   for (int i = 0; i < 6; i++)
   {
-    data[i] = random(-100, 100); 
+    data[i] = random(-32768, 32767); 
   }
   bool is_ack = false;
   while (!is_ack) // packet will keep sending until it is acknowledged by laptop
   {
     sendDataPacket(data);
-//    sendDefaultPacket(HELLO);
     waitForData();
     if (crcCheck() && packetCheck(0, ACK))
     {

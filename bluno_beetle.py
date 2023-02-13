@@ -5,6 +5,8 @@ from read_delegate import ReadDelegate
 from struct import *
 from enum import IntEnum
 
+import time
+
 class PacketType(IntEnum):
     HELLO = 0
     ACK = 1
@@ -37,8 +39,6 @@ class BlunoBeetle:
 
     def disconnect(self):
         self.peripheral.disconnect()
-        self.peripheral = None
-        self.write_service = None
         self.is_connected = False
 
     def reconnect(self):
@@ -73,13 +73,21 @@ class BlunoBeetle:
             self.send_default_packet(PacketType.HELLO)
             print("Initiated 3-way handshake...")
 
+            start_time = time.perf_counter()
+            tle = False
+
             # busy wait for response from beetle
             while self.delegate.buffer_len < 16:
                 if self.peripheral.waitForNotifications(0.0005):
                     pass
+                elif time.perf_counter() - start_time >= 1.0:
+                    tle = True
+                    break
+                
+            if tle:
+                continue
 
             self.ble_packet.unpack(self.delegate.extract_buffer())
-            self.unpack_packet()
 
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
@@ -94,15 +102,13 @@ class BlunoBeetle:
 
             print("3-way handshake complete.")
                               
-    # for testing purposes
+    # for testing
     def unpack_packet(self):
         print("Bluno ID: {}, Packet type: {}".format(self.ble_packet.get_beetle_id(), self.ble_packet.get_packet_type()));
 
         print("Euler data: {}, Acceleration data: {}".format(self.ble_packet.get_euler_data(), self.ble_packet.get_acc_data()))
          
     def process_data(self):
-        print("Handling packet...")
-
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.send_default_packet(PacketType.ACK)
@@ -113,9 +119,14 @@ class BlunoBeetle:
         #print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
 
     def wait_for_data(self):
+        start_time = time.perf_counter()
         try:
             while True:
                 if self.peripheral.waitForNotifications(0.0005):
+                    # reset start time if packet is received
+                    start_time = time.perf_counter()
+
+                    # check if a full packet is in buffer
                     if self.delegate.buffer_len < 16:
                         self.fragmented_packet_count += 1
                         continue
@@ -123,6 +134,13 @@ class BlunoBeetle:
                     # buffer_len is >= 16
                     self.process_data()
                     continue
+
+                # no packet received, check for timeout
+                if time.perf_counter() - start_time >= 1.0:
+                    self.delegate.reset_buffer()
+                    self.reconnect()
+                    start_time = time.perf_counter()
+
                 #print("waiting...\r")
         except BTLEDisconnectError:
             print("Beetle disconnected")
@@ -131,7 +149,6 @@ class BlunoBeetle:
             self.wait_for_data()
         except Exception as e:
             print(e)
-            self.disconnect()
             self.delegate.reset_buffer()
             self.reconnect()
             self.wait_for_data()

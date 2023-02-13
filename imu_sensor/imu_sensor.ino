@@ -96,9 +96,6 @@ void generateDefaultPackets()
   int data[] = {0, 0, 0, 0, 0, 0};
   for (int i = 0; i < 3; i++)
   {
-//    incorrect casting
-//    BLEPacket p = generatePacket(PacketType(i), data);
-//    default_packets[i] = (byte*)&p;
     default_packets[i] = generatePacket(PacketType(i), data);
   }
 }
@@ -144,21 +141,14 @@ void setup() {
   threeWayHandshake();
 }
 
+// IMU data uses UDP to keep sending data to relay node
+// No acknowledgement from relay node needed
 void loop() {
-  delay(20);
+  delay(50); // frequency of 20Hz
   int data[6];
   for (int i = 0; i < 6; i++)
   {
-    data[i] = random(-100, 100); 
+    data[i] = random(-32768, 32767); 
   }
   sendDataPacket(data);
-//  bool is_ack = false;
-//  while (!is_ack) // packet will keep sending until it is acknowledged by laptop
-//  {
-//    sendDataPacket(data);
-//    if (crcCheck() && packetCheck(ACK))
-//    {
-//      is_ack = true;
-//    }
-//  }
 }
