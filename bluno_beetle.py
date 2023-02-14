@@ -35,7 +35,7 @@ class BlunoBeetle:
         self.peripheral.withDelegate(self.delegate)
         services = self.peripheral.getServices()
         self.write_service = self.peripheral.getServiceByUUID(list(services)[self.write_service_id].uuid)
-        self.three_way_handshake()
+        #self.three_way_handshake()
 
     def disconnect(self):
         self.peripheral.disconnect()
@@ -119,9 +119,10 @@ class BlunoBeetle:
         #print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
 
     def wait_for_data(self):
-        start_time = time.perf_counter()
         try:
+            start_time = time.perf_counter()
             while True:
+                self.three_way_handshake();
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
                     start_time = time.perf_counter()
@@ -136,23 +137,18 @@ class BlunoBeetle:
                     continue
 
                 # no packet received, check for timeout
-                if time.perf_counter() - start_time >= 1.0:
+                if time.perf_counter() - start_time >= 2.5:
                     self.delegate.reset_buffer()
                     self.reconnect()
                     start_time = time.perf_counter()
 
                 #print("waiting...\r")
-        except BTLEDisconnectError:
-            print("Beetle disconnected")
-            self.delegate.reset_buffer()
-            self.reconnect()
-            self.wait_for_data()
         except Exception as e:
             print(e)
             self.delegate.reset_buffer()
             self.reconnect()
             self.wait_for_data()
 
-bluno = BlunoBeetle(3, "b0:b1:13:2d:d6:37")
+bluno = BlunoBeetle(1, "b0:b1:13:2d:d6:37")
 bluno.connect()
 bluno.wait_for_data()
