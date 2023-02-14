@@ -145,8 +145,9 @@ void loop() {
   int data[6];
   for (int i = 0; i < 6; i++)
   {
-    data[i] = random(-32768, 32767); 
+    data[i] = 0; 
   }
+  data[0] = random(0, 2);
   bool is_ack = false;
   while (!is_ack) // packet will keep sending until it is acknowledged by laptop
   {
@@ -163,7 +164,7 @@ void loop() {
     
       // wait for ack from laptop
       waitForData();
-      
+
       if (crcCheck() && packetCheck(0, ACK))
       {
         is_ack = true;

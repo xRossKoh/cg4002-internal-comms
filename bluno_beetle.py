@@ -3,21 +3,15 @@ from crc import CRC
 from ble_packet import BLEPacket
 from read_delegate import ReadDelegate
 from struct import *
-from enum import IntEnum
+from packet_type import PacketType
 
 import time
 
-class PacketType(IntEnum):
-    HELLO = 0
-    ACK = 1
-    NACK = 2
-    DATA = 3
-
 class BlunoBeetle:
-    def __init__(self, beetle_id, mac_addr):
-        self.beetle_id = beetle_id
+    def __init__(self, params):
+        self.beetle_id = params[0]
         self.node_id = 0
-        self.mac_addr = mac_addr
+        self.mac_addr = params[1]
         self.write_service_id = 3
         self.write_service = None
         self.delegate = ReadDelegate()
@@ -35,10 +29,10 @@ class BlunoBeetle:
         self.peripheral.withDelegate(self.delegate)
         services = self.peripheral.getServices()
         self.write_service = self.peripheral.getServiceByUUID(list(services)[self.write_service_id].uuid)
-        #self.three_way_handshake()
-
+        
     def disconnect(self):
         self.peripheral.disconnect()
+        self.delegate.reset_buffer()
         self.is_connected = False
 
     def reconnect(self):
@@ -120,9 +114,9 @@ class BlunoBeetle:
 
     def wait_for_data(self):
         try:
+            self.three_way_handshake()
             start_time = time.perf_counter()
             while True:
-                self.three_way_handshake();
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
                     start_time = time.perf_counter()
@@ -138,17 +132,14 @@ class BlunoBeetle:
 
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= 2.5:
-                    self.delegate.reset_buffer()
                     self.reconnect()
                     start_time = time.perf_counter()
 
                 #print("waiting...\r")
         except Exception as e:
             print(e)
-            self.delegate.reset_buffer()
             self.reconnect()
             self.wait_for_data()
 
-bluno = BlunoBeetle(1, "b0:b1:13:2d:d6:37")
-bluno.connect()
-bluno.wait_for_data()
+#bluno = BlunoBeetle((2, "b0:b1:13:2d:d6:37"))
+#bluno.connect()
