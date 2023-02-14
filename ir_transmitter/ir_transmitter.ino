@@ -26,8 +26,6 @@ const unsigned int MAX_MESSAGE_LENGTH = 16;
 uint8_t serial_buffer[MAX_MESSAGE_LENGTH];
 BLEPacket* curr_packet;
 
-bool is_connected = false;
-
 BLEPacket default_packets[3];
 
 uint16_t crcCalc(uint8_t* data)
@@ -77,7 +75,7 @@ void waitForData()
 BLEPacket generatePacket(PacketType packet_type, int* data)
 {
   BLEPacket p;
-  p.header = (3 << 4) | packet_type;
+  p.header = (1 << 4) | packet_type;
   p.padding = 0;
   p.euler_x = data[0];
   p.euler_y = data[1];
@@ -113,6 +111,7 @@ void sendDataPacket(int* data)
 
 void threeWayHandshake()
 {
+  bool is_connected = false;
   while (!is_connected)
   {
     // wait for hello from laptop
@@ -141,8 +140,6 @@ void setup() {
   threeWayHandshake();
 }
 
-// For IR data, a Stop-N-Wait protocol is used
-// For each packet that the Beetle sends, it awaits an acknowledgement from the laptop
 void loop() {
   delay(2000);
   int data[6];
@@ -155,9 +152,22 @@ void loop() {
   {
     sendDataPacket(data);
     waitForData();
-    if (crcCheck() && packetCheck(0, ACK))
+    if (!crcCheck()) continue;
+    if (packetCheck(0, ACK))
     {
       is_ack = true;
+    }
+    else if (packetCheck(0, HELLO))
+    {
+      sendDefaultPacket(HELLO);
+    
+      // wait for ack from laptop
+      waitForData();
+      
+      if (crcCheck() && packetCheck(0, ACK))
+      {
+        is_ack = true;
+      }
     }
   }
 }
