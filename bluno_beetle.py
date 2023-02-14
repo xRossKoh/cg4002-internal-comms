@@ -141,5 +141,6 @@ class BlunoBeetle:
             self.reconnect()
             self.wait_for_data()
 
-#bluno = BlunoBeetle((2, "b0:b1:13:2d:d6:37"))
-#bluno.connect()
+    def bluno_beetle_main(self):
+        self.connect()
+        self.wait_for_data()
