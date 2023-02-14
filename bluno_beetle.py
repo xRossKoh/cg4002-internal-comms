@@ -15,20 +15,26 @@ class BlunoBeetle:
         self.write_service_id = 3
         self.write_service = None
         self.delegate = ReadDelegate()
-        self.peripheral = None
+        self.peripheral = Peripheral()
         self.crc = CRC()
         self.ble_packet = BLEPacket()
         self.default_packets = []
         self.is_connected = False
         self.fragmented_packet_count = 0;
+        self.processed_bit_count = 0;
 
         self.generate_default_packets()
 
     def connect(self):
-        self.peripheral = Peripheral(self.mac_addr)
-        self.peripheral.withDelegate(self.delegate)
-        services = self.peripheral.getServices()
-        self.write_service = self.peripheral.getServiceByUUID(list(services)[self.write_service_id].uuid)
+        try:
+            self.peripheral.connect(self.mac_addr)
+            #print("Attempting connection with beetle {}...\r".format(self.beetle_id))
+            self.peripheral.withDelegate(self.delegate)
+            services = self.peripheral.getServices()
+            self.write_service = self.peripheral.getServiceByUUID(list(services)[self.write_service_id].uuid)
+        except Exception as e:
+            #print(e)
+            self.connect()
         
     def disconnect(self):
         self.peripheral.disconnect()
@@ -36,9 +42,9 @@ class BlunoBeetle:
         self.is_connected = False
 
     def reconnect(self):
-        print("Reconnecting...\r")
         for x in range(5):
             self.disconnect()
+        #print("Disconnected from beetle {}\r".format(self.beetle_id))
         self.connect()
     
     def generate_default_packets(self):
@@ -65,7 +71,7 @@ class BlunoBeetle:
     def three_way_handshake(self):
         while not self.is_connected:
             self.send_default_packet(PacketType.HELLO)
-            print("Initiated 3-way handshake...")
+            #print("Initiated 3-way handshake with beetle {}...\r".format(self.beetle_id))
 
             start_time = time.perf_counter()
             tle = False
@@ -85,7 +91,7 @@ class BlunoBeetle:
 
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
-                print("3-way handshake failed.")
+                #print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
                 continue
 
             # else reply with ack
@@ -94,14 +100,18 @@ class BlunoBeetle:
             # change connected state to true
             self.is_connected = True
 
-            print("3-way handshake complete.")
+            #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
                               
     # for testing
     def unpack_packet(self):
-        print("Bluno ID: {}, Packet type: {}".format(self.ble_packet.get_beetle_id(), self.ble_packet.get_packet_type()));
-
-        print("Euler data: {}, Acceleration data: {}".format(self.ble_packet.get_euler_data(), self.ble_packet.get_acc_data()))
-         
+        #print("Bluno ID: {}, Packet type: {}, Euler data: {}, Acceleration data: {}".format(
+        #    self.ble_packet.get_beetle_id(), 
+        #    self.ble_packet.get_packet_type(),
+        #    self.ble_packet.get_euler_data(),
+        #    self.ble_packet.get_acc_data()
+        #));
+        pass
+        
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
@@ -128,19 +138,34 @@ class BlunoBeetle:
 
                     # buffer_len is >= 16
                     self.process_data()
+                    self.processed_bit_count += 128
                     continue
 
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= 2.5:
                     self.reconnect()
                     start_time = time.perf_counter()
-
-                #print("waiting...\r")
         except Exception as e:
-            print(e)
+            #print(e)
             self.reconnect()
             self.wait_for_data()
 
     def bluno_beetle_main(self):
         self.connect()
         self.wait_for_data()
+
+    def print_beetle_info(self):
+        print("Beetle {}".format(self.beetle_id))
+        print("Status: Connected" if self.is_connected else "Status: Disconnected")
+        print("Last processed packet:")
+        print("Euler data: {}, Acceleration data: {}".format(
+            self.ble_packet.get_euler_data(), 
+            self.ble_packet.get_acc_data())
+        )
+        print("************************************************************************************************************")
+
+    def get_processed_bit_count(self):
+        return self.processed_bit_count
+
+    def get_fragmented_packet_count(self):
+        return self.fragmented_packet_count

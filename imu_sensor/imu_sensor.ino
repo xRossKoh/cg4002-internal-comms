@@ -113,6 +113,7 @@ void sendDataPacket(int* data)
 
 void threeWayHandshake()
 {
+//  bool is_connected = false;
   while (!is_connected)
   {
     // wait for hello from laptop
@@ -141,37 +142,19 @@ void setup() {
   threeWayHandshake();
 }
 
-// IMU data uses UDP to keep sending data to relay node
-// No acknowledgement from relay node needed
 void loop() {
+  delay(50); // frequency of 20Hz
   if (Serial.available()) {
-    waitForData();
-    if (!crcCheck() || !packetCheck(0, HELLO))
-    {
-      sendDefaultPacket(NACK);
-    }
-    else
-    {
-      is_connected = false;
-      sendDefaultPacket(HELLO);
-    
-      // wait for ack from laptop
-      waitForData();
-
-      if (crcCheck() && packetCheck(0, ACK))
-      {
-        is_connected = true;
-      }
-    }
+    is_connected = false;
+    threeWayHandshake();
   }
-  if (is_connected)
+  else
   {
-    delay(50); // frequency of 20Hz
     int data[6];
     for (int i = 0; i < 6; i++)
     {
       data[i] = random(-32768, 32767); 
     }
-    sendDataPacket(data);
+    sendDataPacket(data); 
   }
 }

@@ -11,7 +11,3 @@ class BlunoBeetleUDP(BlunoBeetle):
             self.unpack_packet()
 
         #print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
-
-bluno = BlunoBeetleUDP((3, "b0:b1:13:2d:d6:37"))
-bluno.connect()
-bluno.wait_for_data()
