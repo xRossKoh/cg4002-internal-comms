@@ -156,7 +156,8 @@ class BlunoBeetle:
         print("Beetle {}".format(self.beetle_id))
         print("Status: Connected" if self.is_connected else "Status: Disconnected")
         print("Last processed packet:")
-        print("Euler data: {}, Acceleration data: {}".format(
+        print("Packet type: {}, Euler data: {}, Acceleration data: {}".format(
+            PacketType(self.ble_packet.get_packet_type()),
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data())
         )
