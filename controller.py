@@ -14,11 +14,13 @@ class Controller:
                 BlunoBeetleUDP(params[2])
             ]
         self.start_time = 0
+        self.prev_time = 0
         self.prev_processed_bit_count = 0
+        self.current_data_rate = 0
 
     def print_statistics(self):
         while True:
-            for i in range(20):
+            for i in range(21):
                 print(LINE_UP, end="")
 
             print("***********************************************************************************************************")
@@ -30,9 +32,15 @@ class Controller:
                 beetle.print_beetle_info()
 
             print("Statistics".ljust(80))
-            print("Data rate: {} kbps".ljust(80).format((processed_bit_count / 1000) / (time.perf_counter() - self.start_time)))
-            self.prev_processed_bit_count = processed_bit_count
-            self.prev_time = time.perf_counter()
+            current_time = time.perf_counter()
+            if current_time - self.prev_time >= 1:
+                self.current_data_rate = ((processed_bit_count - self.prev_processed_bit_count) / 1000) / (current_time - self.prev_time)
+                self.prev_time = current_time
+                self.prev_processed_bit_count = processed_bit_count
+            print("Current data rate: {} kbps".ljust(80).format(self.current_data_rate))
+            print("Average Data rate: {} kbps".ljust(80).format(
+                (processed_bit_count / 1000) / (current_time - self.start_time)
+            ))
             print("No. of fragmented packets: {}".ljust(80).format(fragmented_packet_count))
             print("************************************************************************************************************")
 
@@ -43,7 +51,7 @@ class Controller:
 
         self.threads.append(threading.Thread(target=self.print_statistics, args=()))
         
-        for i in range(20):
+        for i in range(21):
             print()
 
         self.start_time = time.perf_counter()
