@@ -153,14 +153,14 @@ class BlunoBeetle:
         self.wait_for_data()
 
     def print_beetle_info(self):
-        print("Beetle {}".format(self.beetle_id))
-        print("Status: Connected" if self.is_connected else "Status: Disconnected")
-        print("Last processed packet:")
-        print("Packet type: {}, Euler data: {}, Acceleration data: {}".format(
+        print("Beetle {}".ljust(80).format(self.beetle_id))
+        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
+        print("Last processed packet:".ljust(80))
+        print("Packet type: {}, Euler data: {}, Acceleration data: {}".ljust(80).format(
             PacketType(self.ble_packet.get_packet_type()),
             self.ble_packet.get_euler_data(), 
-            self.ble_packet.get_acc_data())
-        )
+            self.ble_packet.get_acc_data()
+        ))
         print("************************************************************************************************************")
 
     def get_processed_bit_count(self):

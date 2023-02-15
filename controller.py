@@ -4,8 +4,7 @@ from bluno_beetle_udp import BlunoBeetleUDP
 import threading
 import time
 
-LINE_UP = '\033[1A'
-LINE_CLEAR = '\x1b[2k'
+LINE_UP = '\033[F'
 
 class Controller:
     def __init__(self, params):
@@ -14,15 +13,15 @@ class Controller:
                 BlunoBeetle(params[1]), 
                 BlunoBeetleUDP(params[2])
             ]
-        self.prev_time = 0
+        self.start_time = 0
         self.prev_processed_bit_count = 0
 
     def print_statistics(self):
         while True:
             for i in range(20):
-                print(LINE_UP, end=LINE_CLEAR)
+                print(LINE_UP, end="")
 
-            print("************************************************************************************************************")
+            print("***********************************************************************************************************")
             processed_bit_count = 0
             fragmented_packet_count = 0
             for beetle in self.beetles:
@@ -30,11 +29,11 @@ class Controller:
                 fragmented_packet_count += beetle.get_fragmented_packet_count()
                 beetle.print_beetle_info()
 
-            print("Statistics")
-            print("Data rate: {} kbps".format(((processed_bit_count - self.prev_processed_bit_count) / 1000) / (time.perf_counter() - self.prev_time)))
+            print("Statistics".ljust(80))
+            print("Data rate: {} kbps".ljust(80).format((processed_bit_count / 1000) / (time.perf_counter() - self.start_time)))
             self.prev_processed_bit_count = processed_bit_count
             self.prev_time = time.perf_counter()
-            print("No. of fragmented packets: {}".format(fragmented_packet_count))
+            print("No. of fragmented packets: {}".ljust(80).format(fragmented_packet_count))
             print("************************************************************************************************************")
 
     def run_threads(self):
@@ -47,6 +46,6 @@ class Controller:
         for i in range(20):
             print()
 
-        self.prev_time = time.perf_counter()
+        self.start_time = time.perf_counter()
         for thread in self.threads:
-            thread.start()
+            thread.start() 
