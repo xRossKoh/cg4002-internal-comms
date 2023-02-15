@@ -120,8 +120,6 @@ class BlunoBeetle:
         else:
             self.send_default_packet(PacketType.NACK)
 
-        #print("Number of fragmented packet(s): {}".format(self.fragmented_packet_count))
-
     def wait_for_data(self):
         try:
             self.three_way_handshake()
