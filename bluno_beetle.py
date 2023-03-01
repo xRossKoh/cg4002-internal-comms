@@ -52,8 +52,8 @@ class BlunoBeetle:
             node_id = self.node_id
             packet_type = i
             header = (node_id << 4) | packet_type
-            data = [header, 0, 0, 0, 0, 0, 0, 0]
-            data[7] = self.crc.calc(self.ble_packet.pack(data))
+            data = [header, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            data[9] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
 
     def send_default_packet(self, packet_type):
@@ -77,7 +77,7 @@ class BlunoBeetle:
             tle = False
 
             # busy wait for response from beetle
-            while self.delegate.buffer_len < 16:
+            while self.delegate.buffer_len < 20:
                 if self.peripheral.waitForNotifications(0.0005):
                     pass
                 elif time.perf_counter() - start_time >= 1.0:
@@ -130,13 +130,13 @@ class BlunoBeetle:
                     start_time = time.perf_counter()
 
                     # check if a full packet is in buffer
-                    if self.delegate.buffer_len < 16:
+                    if self.delegate.buffer_len < 20:
                         self.fragmented_packet_count += 1
                         continue
 
                     # buffer_len is >= 16
                     self.process_data()
-                    self.processed_bit_count += 128
+                    self.processed_bit_count += 160
                     continue
 
                 # no packet received, check for timeout
@@ -156,10 +156,15 @@ class BlunoBeetle:
         print("Beetle {}".ljust(80).format(self.beetle_id))
         print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
         print("Last processed packet:".ljust(80))
-        print("Packet type: {}, Euler data: {}, Acceleration data: {}".ljust(80).format(
+        print("Packet type: {}".ljust(80).format(
             PacketType(self.ble_packet.get_packet_type()),
+        ))
+        print("Euler data: {}, Acceleration data: {}".ljust(80).format(
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data()
+        ))
+        print("Flex sensor data: {}".ljust(80).format(
+            self.ble_packet.get_flex_data()
         ))
         print("************************************************************************************************************")
 

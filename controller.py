@@ -20,7 +20,7 @@ class Controller:
 
     def print_statistics(self):
         while True:
-            for i in range(21):
+            for i in range(27):
                 print(LINE_UP, end="")
 
             print("***********************************************************************************************************")
@@ -51,7 +51,7 @@ class Controller:
 
         self.threads.append(threading.Thread(target=self.print_statistics, args=()))
         
-        for i in range(21):
+        for i in range(27):
             print()
 
         self.start_time = time.perf_counter()
