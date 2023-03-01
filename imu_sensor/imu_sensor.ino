@@ -18,10 +18,12 @@ typedef struct
   int acc_x;
   int acc_y;
   int acc_z;
+  int flex_1;
+  int flex_2;
   uint16_t crc;             // Cyclic redundancy check (CRC-16)
 } BLEPacket; 
 
-const unsigned int MAX_MESSAGE_LENGTH = 16;
+const unsigned int MAX_MESSAGE_LENGTH = 20;
 
 uint8_t serial_buffer[MAX_MESSAGE_LENGTH];
 BLEPacket* curr_packet;
@@ -85,6 +87,8 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
   p.acc_x = data[3];
   p.acc_y = data[4];
   p.acc_z = data[5];
+  p.flex_1 = data[6];
+  p.flex_2 = data[7]
   p.crc = 0;
   uint16_t calculatedCRC = crcCalc((uint8_t*)&p);
   p.crc = calculatedCRC;
@@ -93,7 +97,7 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
 
 void generateDefaultPackets()
 {
-  int data[] = {0, 0, 0, 0, 0, 0};
+  int data[] = {0, 0, 0, 0, 0, 0, 0, 0};
   for (int i = 0; i < 3; i++)
   {
     default_packets[i] = generatePacket(PacketType(i), data);
@@ -150,8 +154,8 @@ void loop() {
   }
   else
   {
-    int data[6];
-    for (int i = 0; i < 6; i++)
+    int data[8];
+    for (int i = 0; i < 8; i++)
     {
       data[i] = random(-32768, 32767); 
     }
