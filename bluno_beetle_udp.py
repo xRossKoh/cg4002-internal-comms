@@ -8,4 +8,4 @@ class BlunoBeetleUDP(BlunoBeetle):
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
-            self.unpack_packet()
+            self.add_packet_to_queue()

@@ -1,22 +1,78 @@
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_udp import BlunoBeetleUDP
+from _socket import SHUT_RDWR
+from constant import LINE_UP
+from queue import Queue
 
+import os
+import socket
+import base64
+import sys
 import threading
+import traceback
 import time
 
-LINE_UP = '\033[F'
-
-class Controller:
+class Controller(threading.Thread):
     def __init__(self, params):
+        super().__init__()
+
+        # Create a TCP/IP socket
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.client_socket = client_socket
+        self.connection = client_socket.connect(("localhost" , 8080))
+        self.secret_key = None
+        self.secret_key_bytes = None
+
+        # Flags
+        self.shutdown = threading.Event()
+        
         self.beetles = [
                 BlunoBeetle(params[0]), 
                 BlunoBeetle(params[1]), 
                 BlunoBeetleUDP(params[2])
             ]
+
+        # Packet buffer for ext comms
+        self.packet_queue = Queue()
+        
+        # For statistics calculation
         self.start_time = 0
         self.prev_time = 0
         self.prev_processed_bit_count = 0
         self.current_data_rate = 0
+       
+    def setup(self):
+        print('Setting up Secret Key')
+        print('Default Secret Key: chrisisdabest123')
+
+        secret_key = 'chrisisdabest123'
+
+        self.secret_key = secret_key
+        self.secret_key_bytes = bytes(str(secret_key), encoding='utf-8')
+
+    def close_connection(self):
+        self.connection.shutdown(SHUT_RDWR)
+        self.connection.close()
+        self.shutdown.set()
+        self.client_socket.close()
+
+        print("Shutting Down Connection")
+
+    def run(self):
+        self.setup()
+        self.run_threads()
+
+        while not self.shutdown.is_set():
+            try:
+                #message = input("Enter message to be sent: ")
+                #if message == 'q':
+                #    break
+                if not BlunoBeetle.packet_queue.empty():
+                    self.client_socket.send(BlunoBeetle.packet_queue.get())
+            except Exception as _:
+                traceback.print_exc()
+                self.close_connection()
 
     def print_statistics(self):
         while True:
@@ -56,4 +112,16 @@ class Controller:
 
         self.start_time = time.perf_counter()
         for thread in self.threads:
-            thread.start() 
+            thread.start()
+
+if __name__ == '__main__':
+    controller = Controller([
+        (1, "c4:be:84:20:1a:51"),   # P1 gun (IR transmitter)
+        (2, "b0:b1:13:2d:d6:37"),   # P1 vest (IR receiver)
+        (3, "c4:be:84:20:19:4c")    # P1 glove (IMU and flex sensors)
+        #(4, ""),                   # P2 gun (IR transmitter)
+        #(5, ""),                   # P2 vest (IR receiver)
+        #(6, "")                    # P2 glove (IMU and flex sensors)
+    ])
+    controller.start()
+   

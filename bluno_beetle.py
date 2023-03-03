@@ -5,10 +5,14 @@ from read_delegate import ReadDelegate
 from struct import *
 from packet_type import PacketType
 from constant import PACKET_SIZE
+from queue import Queue
 
 import time
 
 class BlunoBeetle:
+    # packet queue as class variable
+    packet_queue = Queue()
+
     def __init__(self, params):
         self.beetle_id = params[0]
         self.node_id = 0
@@ -112,12 +116,15 @@ class BlunoBeetle:
         #    self.ble_packet.get_acc_data()
         #))
         pass
-        
+    
+    def add_packet_to_queue(self):
+        BlunoBeetle.packet_queue.put(self.ble_packet.pack())
+
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.send_default_packet(PacketType.ACK)
-            self.unpack_packet()
+            self.add_packet_to_queue()
         else:
             self.send_default_packet(PacketType.NACK)
 
