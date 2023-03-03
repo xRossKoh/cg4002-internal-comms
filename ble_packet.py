@@ -1,9 +1,10 @@
 from multipledispatch import dispatch
+from constant import PACKET_FORMAT_STRING
+
 import struct
 
 class BLEPacket:
     def __init__(self):
-        self.format = 'Bx8hH'
         self.header = 0
         self.euler_x = 0
         self.euler_y = 0
@@ -29,7 +30,7 @@ class BLEPacket:
    
     @dispatch()
     def pack(self):
-        return struct.pack(self.format,
+        return struct.pack(PACKET_FORMAT_STRING,
                 self.header,
                 self.euler_x,
                 self.euler_y,
@@ -44,7 +45,7 @@ class BLEPacket:
     @dispatch(list)
     def pack(self, params):
         self.update_attributes(params)
-        return struct.pack(self.format,
+        return struct.pack(PACKET_FORMAT_STRING,
                 self.header,
                 self.euler_x,
                 self.euler_y,
@@ -58,7 +59,7 @@ class BLEPacket:
 
     # unpacks byte array and sets the attributes based on the packet data
     def unpack(self, packet):
-        self.update_attributes(struct.unpack(self.format, packet))
+        self.update_attributes(struct.unpack(PACKET_FORMAT_STRING, packet))
 
     def get_header(self):
         return self.header

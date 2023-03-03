@@ -1,4 +1,5 @@
 from bluepy.btle import DefaultDelegate
+from constant import PACKET_SIZE
 
 class ReadDelegate(DefaultDelegate):
     def __init__(self):
@@ -9,8 +10,8 @@ class ReadDelegate(DefaultDelegate):
         self.data = b''
 
     def extract_buffer(self):
-        packet = self.data[:20]
-        self.data = self.data[20:]
+        packet = self.data[:PACKET_SIZE]
+        self.data = self.data[PACKET_SIZE:]
         return packet
 
     def handleNotification(self, cHandle, data):

@@ -4,6 +4,7 @@ from ble_packet import BLEPacket
 from read_delegate import ReadDelegate
 from struct import *
 from packet_type import PacketType
+from constant import PACKET_SIZE
 
 import time
 
@@ -77,7 +78,7 @@ class BlunoBeetle:
             tle = False
 
             # busy wait for response from beetle
-            while self.delegate.buffer_len < 20:
+            while self.delegate.buffer_len < PACKET_SIZE:
                 if self.peripheral.waitForNotifications(0.0005):
                     pass
                 elif time.perf_counter() - start_time >= 1.0:
@@ -130,13 +131,13 @@ class BlunoBeetle:
                     start_time = time.perf_counter()
 
                     # check if a full packet is in buffer
-                    if self.delegate.buffer_len < 20:
+                    if self.delegate.buffer_len < PACKET_SIZE:
                         self.fragmented_packet_count += 1
                         continue
 
                     # buffer_len is >= 20
                     self.process_data()
-                    self.processed_bit_count += 160
+                    self.processed_bit_count += PACKET_SIZE * 8
                     continue
 
                 # no packet received, check for timeout
