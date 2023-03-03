@@ -58,7 +58,24 @@ class Controller(threading.Thread):
         self.client_socket.close()
 
         print("Shutting Down Connection")
+  
+    def run_threads(self):
+        self.threads = []
 
+        # each beetle runs on a separate thread
+        for i in range(3):
+            self.threads.append(threading.Thread(target=self.beetles[i].bluno_beetle_main, args=()))
+
+        self.threads.append(threading.Thread(target=self.print_statistics, args=()))
+        
+        for i in range(27):
+            print()
+
+        self.start_time = time.perf_counter()
+        for thread in self.threads:
+            thread.start()
+    
+    # run() function invoked by thread.start()
     def run(self):
         self.setup()
         self.run_threads()
@@ -73,7 +90,8 @@ class Controller(threading.Thread):
             except Exception as _:
                 traceback.print_exc()
                 self.close_connection()
-
+    
+    # prints beetle data and statistics to std output
     def print_statistics(self):
         while True:
             for i in range(27):
@@ -100,19 +118,6 @@ class Controller(threading.Thread):
             print("No. of fragmented packets: {}".ljust(80).format(fragmented_packet_count))
             print("************************************************************************************************************")
 
-    def run_threads(self):
-        self.threads = []
-        for i in range(3):
-            self.threads.append(threading.Thread(target=self.beetles[i].bluno_beetle_main, args=()))
-
-        self.threads.append(threading.Thread(target=self.print_statistics, args=()))
-        
-        for i in range(27):
-            print()
-
-        self.start_time = time.perf_counter()
-        for thread in self.threads:
-            thread.start()
 
 if __name__ == '__main__':
     controller = Controller([

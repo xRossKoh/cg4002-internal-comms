@@ -10,7 +10,8 @@ from queue import Queue
 import time
 
 class BlunoBeetle:
-    # packet queue as class variable
+    # Class variable
+    # Store packets that are ready to be sent via ext comms
     packet_queue = Queue()
 
     def __init__(self, params):
@@ -106,17 +107,7 @@ class BlunoBeetle:
             self.is_connected = True
 
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
-                              
-    # for testing
-    def unpack_packet(self):
-        #print("Bluno ID: {}, Packet type: {}, Euler data: {}, Acceleration data: {}".format(
-        #    self.ble_packet.get_beetle_id(), 
-        #    self.ble_packet.get_packet_type(),
-        #    self.ble_packet.get_euler_data(),
-        #    self.ble_packet.get_acc_data()
-        #))
-        pass
-    
+                                  
     def add_packet_to_queue(self):
         BlunoBeetle.packet_queue.put(self.ble_packet.pack())
 
@@ -141,8 +132,8 @@ class BlunoBeetle:
                     if self.delegate.buffer_len < PACKET_SIZE:
                         self.fragmented_packet_count += 1
                         continue
-
-                    # buffer_len is >= 20
+                    
+                    # full packet in buffer
                     self.process_data()
                     self.processed_bit_count += PACKET_SIZE * 8
                     continue
@@ -156,10 +147,16 @@ class BlunoBeetle:
             self.reconnect()
             self.wait_for_data()
 
+    def get_processed_bit_count(self):
+        return self.processed_bit_count
+
+    def get_fragmented_packet_count(self):
+        return self.fragmented_packet_count
+
     def bluno_beetle_main(self):
         self.connect()
         self.wait_for_data()
-
+    
     def print_beetle_info(self):
         print("Beetle {}".ljust(80).format(self.beetle_id))
         print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
@@ -176,8 +173,14 @@ class BlunoBeetle:
         ))
         print("************************************************************************************************************")
 
-    def get_processed_bit_count(self):
-        return self.processed_bit_count
 
-    def get_fragmented_packet_count(self):
-        return self.fragmented_packet_count
+    # for testing
+    def unpack_packet(self):
+        #print("Bluno ID: {}, Packet type: {}, Euler data: {}, Acceleration data: {}".format(
+        #    self.ble_packet.get_beetle_id(), 
+        #    self.ble_packet.get_packet_type(),
+        #    self.ble_packet.get_euler_data(),
+        #    self.ble_packet.get_acc_data()
+        #))
+        pass
+
