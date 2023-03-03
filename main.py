@@ -60,20 +60,18 @@ class Controller(threading.Thread):
         print("Shutting Down Connection")
   
     def run_threads(self):
-        self.threads = []
+        # create thread for printing statistics
+        print_thread = threading.Thread(target=self.print_statistics, args=())
 
-        # each beetle runs on a separate thread
-        for i in range(3):
-            self.threads.append(threading.Thread(target=self.beetles[i].bluno_beetle_main, args=()))
-
-        self.threads.append(threading.Thread(target=self.print_statistics, args=()))
-        
         for i in range(27):
             print()
 
         self.start_time = time.perf_counter()
-        for thread in self.threads:
-            thread.start()
+
+        for i in range(3):
+            self.beetles[i].start()
+
+        print_thread.start()
     
     # run() function invoked by thread.start()
     def run(self):
@@ -88,7 +86,7 @@ class Controller(threading.Thread):
                 if not BlunoBeetle.packet_queue.empty():
                     self.client_socket.send(BlunoBeetle.packet_queue.get())
             except Exception as _:
-                traceback.print_exc()
+                # traceback.print_exc()
                 self.close_connection()
     
     # prints beetle data and statistics to std output

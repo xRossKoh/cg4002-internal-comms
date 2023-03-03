@@ -6,15 +6,18 @@ from struct import *
 from packet_type import PacketType
 from constant import PACKET_SIZE
 from queue import Queue
+from threading import Thread
 
 import time
 
-class BlunoBeetle:
+class BlunoBeetle(Thread):
     # Class variable
     # Store packets that are ready to be sent via ext comms
     packet_queue = Queue()
 
     def __init__(self, params):
+        super().__init__()
+
         self.beetle_id = params[0]
         self.node_id = 0
         self.mac_addr = params[1]
@@ -153,7 +156,7 @@ class BlunoBeetle:
     def get_fragmented_packet_count(self):
         return self.fragmented_packet_count
 
-    def bluno_beetle_main(self):
+    def run(self):
         self.connect()
         self.wait_for_data()
     
