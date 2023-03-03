@@ -20,8 +20,8 @@ class BlunoBeetle:
         self.ble_packet = BLEPacket()
         self.default_packets = []
         self.is_connected = False
-        self.fragmented_packet_count = 0;
-        self.processed_bit_count = 0;
+        self.fragmented_packet_count = 0
+        self.processed_bit_count = 0
 
         self.generate_default_packets()
 
@@ -109,7 +109,7 @@ class BlunoBeetle:
         #    self.ble_packet.get_packet_type(),
         #    self.ble_packet.get_euler_data(),
         #    self.ble_packet.get_acc_data()
-        #));
+        #))
         pass
         
     def process_data(self):
@@ -134,7 +134,7 @@ class BlunoBeetle:
                         self.fragmented_packet_count += 1
                         continue
 
-                    # buffer_len is >= 16
+                    # buffer_len is >= 20
                     self.process_data()
                     self.processed_bit_count += 160
                     continue

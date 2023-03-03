@@ -88,7 +88,7 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
   p.acc_y = data[4];
   p.acc_z = data[5];
   p.flex_1 = data[6];
-  p.flex_2 = data[7]
+  p.flex_2 = data[7];
   p.crc = 0;
   uint16_t calculatedCRC = crcCalc((uint8_t*)&p);
   p.crc = calculatedCRC;

@@ -11,8 +11,8 @@ class BLEPacket:
         self.acc_x = 0
         self.acc_y = 0
         self.acc_z = 0
-        self.flex_1 = 0;
-        self.flex_2 = 0;
+        self.flex_1 = 0
+        self.flex_2 = 0
         self.set_crc(0)
 
     def update_attributes(self, params):

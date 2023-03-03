@@ -9,8 +9,8 @@ class ReadDelegate(DefaultDelegate):
         self.data = b''
 
     def extract_buffer(self):
-        packet = self.data[:16]
-        self.data = self.data[16:]
+        packet = self.data[:20]
+        self.data = self.data[20:]
         return packet
 
     def handleNotification(self, cHandle, data):
