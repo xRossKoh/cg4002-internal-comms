@@ -23,9 +23,9 @@ typedef struct
   uint16_t crc;             // Cyclic redundancy check (CRC-16)
 } BLEPacket; 
 
-const unsigned int MAX_MESSAGE_LENGTH = 20;
+const unsigned int PACKET_SIZE = 20;
 
-uint8_t serial_buffer[MAX_MESSAGE_LENGTH];
+uint8_t serial_buffer[PACKET_SIZE];
 BLEPacket* curr_packet;
 
 bool is_connected = false;
@@ -37,10 +37,10 @@ uint16_t crcCalc(uint8_t* data)
    uint16_t curr_crc = 0x0000;
    uint8_t sum1 = (uint8_t) curr_crc;
    uint8_t sum2 = (uint8_t) (curr_crc >> 8);
-   int index;
-   for(index = 0; index < MAX_MESSAGE_LENGTH; index = index+1)
+ 
+   for (int i = 0; i < PACKET_SIZE; i++)
    {
-      sum1 = (sum1 + data[index]) % 255;
+      sum1 = (sum1 + data[i]) % 255;
       sum2 = (sum2 + sum1) % 255;
    }
    return (sum2 << 8) | sum1;
@@ -64,7 +64,7 @@ bool packetCheck(uint8_t node_id, PacketType packet_type)
 void waitForData()
 {
   unsigned int buf_pos = 0;
-  while (buf_pos < MAX_MESSAGE_LENGTH)
+  while (buf_pos < PACKET_SIZE)
   {
     if (Serial.available())
     {
@@ -106,13 +106,13 @@ void generateDefaultPackets()
 
 void sendDefaultPacket(PacketType packet_type)
 {
-  Serial.write((byte*)&default_packets[packet_type], MAX_MESSAGE_LENGTH);
+  Serial.write((byte*)&default_packets[packet_type], PACKET_SIZE);
 }
 
 void sendDataPacket(int* data)
 {
   BLEPacket p = generatePacket(DATA, data);
-  Serial.write((byte*)&p, MAX_MESSAGE_LENGTH);
+  Serial.write((byte*)&p, PACKET_SIZE);
 }
 
 void threeWayHandshake()
