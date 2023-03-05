@@ -65,8 +65,8 @@ class Controller(threading.Thread):
 
         self.start_time = time.perf_counter()
 
-        for i in range(3):
-            self.beetles[i].start()
+        for beetle in self.beetles:
+            beetle.start()
 
         print_thread.start()
     
@@ -118,8 +118,7 @@ if __name__ == '__main__':
     controller = Controller([
         (1, "c4:be:84:20:1a:76"),   # P1 gun (IR transmitter)
         (2, "b0:b1:13:2d:b6:3d"),   # P1 vest (IR receiver)
-        #(3, "c4:be:84:20:19:4c")    # P1 glove (IMU and flex sensors)
-        (3, "c4:be:84:20:1a:51")
+        (3, "c4:be:84:20:1a:51"),   # P1 glove (IMU and flex sensors)
         #(4, ""),                   # P2 gun (IR transmitter)
         #(5, ""),                   # P2 vest (IR receiver)
         #(6, "")                    # P2 glove (IMU and flex sensors)
