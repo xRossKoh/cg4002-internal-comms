@@ -75,7 +75,12 @@ class BlunoBeetle(Thread):
         return crc == self.crc.calc(self.ble_packet.pack())
 
     def packet_check(self, packet_type):
-        return self.ble_packet.get_beetle_id() == self.beetle_id and PacketType(self.ble_packet.get_packet_type()) == packet_type
+        try:
+            return self.ble_packet.get_beetle_id() == self.beetle_id and PacketType(self.ble_packet.get_packet_type()) == packet_type
+        except ValueError:
+            # intialize reconnect to reset connection and buffer
+            self.reconnect();
+            self.wait_for_data();
 
     def three_way_handshake(self):
         while not self.is_connected:
@@ -165,7 +170,7 @@ class BlunoBeetle(Thread):
         print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
         print("Last processed packet:".ljust(80))
         print("Packet type: {}".ljust(80).format(
-            PacketType(self.ble_packet.get_packet_type()),
+            self.ble_packet.get_packet_type()
         ))
         print("Euler data: {}, Acceleration data: {}".ljust(80).format(
             self.ble_packet.get_euler_data(), 
