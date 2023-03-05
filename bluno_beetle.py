@@ -6,11 +6,11 @@ from struct import *
 from packet_type import PacketType
 from constant import PACKET_SIZE
 from queue import Queue
-from threading import Thread
 
+import threading
 import time
 
-class BlunoBeetle(Thread):
+class BlunoBeetle(threading.Thread):
     # Class variable
     # Store packets that are ready to be sent via ext comms
     packet_queue = Queue()
@@ -31,6 +31,7 @@ class BlunoBeetle(Thread):
         self.is_connected = False
         self.fragmented_packet_count = 0
         self.processed_bit_count = 0
+        self.shutdown = threading.Event()
 
         self.generate_default_packets()
 
@@ -131,7 +132,7 @@ class BlunoBeetle(Thread):
         try:
             self.three_way_handshake()
             start_time = time.perf_counter()
-            while True:
+            while not self.shutdown.is_set():
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
                     start_time = time.perf_counter()
@@ -150,6 +151,10 @@ class BlunoBeetle(Thread):
                 if time.perf_counter() - start_time >= 2.5:
                     self.reconnect()
                     start_time = time.perf_counter()
+
+            # shutdown connection and terminate thread
+            self.disconnect()
+            print("Beetle ID {} terminated".format(self.beetle_id))
         except Exception as e:
             #print(e)
             self.reconnect()
