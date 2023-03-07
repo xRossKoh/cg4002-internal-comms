@@ -1,9 +1,9 @@
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_udp import BlunoBeetleUDP
 from _socket import SHUT_RDWR
-from constant import LINE_UP
 from queue import Queue
 
+import constant
 import socket
 import threading
 import traceback
@@ -90,7 +90,7 @@ class Controller(threading.Thread):
     def print_statistics(self):
         while True:
             for i in range(27):
-                print(LINE_UP, end="")
+                print(constant.LINE_UP, end="")
 
             print("***********************************************************************************************************")
             processed_bit_count = 0
@@ -116,12 +116,12 @@ class Controller(threading.Thread):
 
 if __name__ == '__main__':
     controller = Controller([
-        (1, "c4:be:84:20:1a:76"),   # P1 gun (IR transmitter)
-        (2, "b0:b1:13:2d:b6:3d"),   # P1 vest (IR receiver)
-        (3, "c4:be:84:20:1a:51"),   # P1 glove (IMU and flex sensors)
-        #(4, ""),                   # P2 gun (IR transmitter)
-        #(5, ""),                   # P2 vest (IR receiver)
-        #(6, "")                    # P2 glove (IMU and flex sensors)
+        #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
+        #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
+        #(3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
+        (1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
+        (2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
+        (3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
     ])
     controller.start()
    
