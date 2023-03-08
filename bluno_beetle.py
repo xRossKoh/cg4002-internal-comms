@@ -6,6 +6,7 @@ from struct import *
 from packet_type import PacketType
 from constant import PACKET_SIZE
 from queue import Queue
+from game_state import GameState
 
 import threading
 import time
@@ -16,7 +17,12 @@ class BlunoBeetle(threading.Thread):
     packet_queue = Queue()
 
     # Variables used to maintain gamestate
+    players = [GameState()]
 
+    # threading event for game state change
+    # set when game state changes
+    # clear when updated game state has been broadcasted to gun and vest
+    game_state_changed = [threading.Event()]
 
     def __init__(self, params):
         super().__init__()
