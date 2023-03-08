@@ -11,9 +11,12 @@ import threading
 import time
 
 class BlunoBeetle(threading.Thread):
-    # Class variable
+    # Class variables
     # Store packets that are ready to be sent via ext comms
     packet_queue = Queue()
+
+    # Variables used to maintain gamestate
+
 
     def __init__(self, params):
         super().__init__()
