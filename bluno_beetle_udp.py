@@ -9,3 +9,6 @@ class BlunoBeetleUDP(BlunoBeetle):
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.add_packet_to_queue()
+
+            # for testing
+            #self.print_test_data()

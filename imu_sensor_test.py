@@ -1,4 +1,7 @@
 from bluno_beetle_udp import BlunoBeetleUDP
 
-imu_sensor = BlunoBeetleUDP((3, "c4:be:84:20:19:4c")) # change the MAC address here
+import constant
+
+#imu_sensor = BlunoBeetleUDP((3, constant.P1_IMU_SENSOR))
+imu_sensor = BlunoBeetleUDP((3, constant.P2_IMU_SENSOR))
 imu_sensor.start()

@@ -43,6 +43,17 @@ class BlunoBeetle(threading.Thread):
         self.shutdown = threading.Event()
 
         self.generate_default_packets()
+    
+    #################### Getter functions ####################
+
+    def get_processed_bit_count(self):
+        return self.processed_bit_count
+
+    def get_fragmented_packet_count(self):
+        return self.fragmented_packet_count
+
+
+    #################### BLE connection ####################
 
     def connect(self):
         try:
@@ -65,7 +76,12 @@ class BlunoBeetle(threading.Thread):
             self.disconnect()
         #print("Disconnected from beetle {}\r".format(self.beetle_id))
         self.connect()
-    
+
+    def shutdown(self):
+        self.shutdown.set()
+
+    #################### Packet generation ####################
+
     def generate_default_packets(self):
         for i in range(3):
             node_id = self.node_id
@@ -74,10 +90,25 @@ class BlunoBeetle(threading.Thread):
             data = [header, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             data[9] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
+    
+    def generate_game_state_packet(self):
+        node_id = self.node_id
+        packet_type = PacketType.DATA
+        header = (node_id << 4) | packet_type
+        data = [header, 
+                BlunoBeetle.players[0].ammo, 
+                BlunoBeetle.players[0].health,
+                0, 0, 0, 0, 0, 0, 0]
+        data[9] = self.crc.calc(self.ble_packet.pack(data))
+        return self.ble_packet.pack(data)
+
+    #################### Packet sending ####################
 
     def send_default_packet(self, packet_type):
         c = self.write_service.getCharacteristics()[0]
         c.write(self.default_packets[int(packet_type)])
+    
+    #################### Checks ####################
 
     def crc_check(self):
         crc = self.ble_packet.get_crc()
@@ -91,6 +122,38 @@ class BlunoBeetle(threading.Thread):
             # intialize reconnect to reset connection and buffer
             self.reconnect();
             self.wait_for_data();
+    
+    ################ Print functions ####################
+    
+    def print_beetle_info(self):
+        print("Beetle {}".ljust(80).format(self.beetle_id))
+        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
+        print("Last processed packet:".ljust(80))
+        print("Packet type: {}".ljust(80).format(
+            self.ble_packet.get_packet_type()
+        ))
+        print("Euler data: {}, Acceleration data: {}".ljust(80).format(
+            self.ble_packet.get_euler_data(), 
+            self.ble_packet.get_acc_data()
+        ))
+        print("Flex sensor data: {}".ljust(80).format(
+            self.ble_packet.get_flex_data()
+        ))
+        print("************************************************************************************************************")
+    
+    # for testing
+    def print_test_data(self):
+        print("Bluno ID: {}, Packet type: {}".format(
+            self.ble_packet.get_beetle_id(), 
+            self.ble_packet.get_packet_type()
+        ))
+        print("Euler data: {}, Acceleration data: {}, Flex data: {}".format(
+            self.ble_packet.get_euler_data(),
+            self.ble_packet.get_acc_data(),
+            self.ble_packet.get_flex_data()
+        ))
+
+    #################### Communication protocl ####################
 
     def three_way_handshake(self):
         while not self.is_connected:
@@ -134,6 +197,9 @@ class BlunoBeetle(threading.Thread):
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.send_default_packet(PacketType.ACK)
             self.add_packet_to_queue()
+
+            # for testing
+            #self.print_test_data()
         else:
             self.send_default_packet(PacketType.NACK)
 
@@ -169,40 +235,7 @@ class BlunoBeetle(threading.Thread):
             self.reconnect()
             self.wait_for_data()
 
-    def get_processed_bit_count(self):
-        return self.processed_bit_count
-
-    def get_fragmented_packet_count(self):
-        return self.fragmented_packet_count
-
+    #################### Main function ####################
     def run(self):
         self.connect()
-        self.wait_for_data()
-    
-    def print_beetle_info(self):
-        print("Beetle {}".ljust(80).format(self.beetle_id))
-        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
-        print("Last processed packet:".ljust(80))
-        print("Packet type: {}".ljust(80).format(
-            self.ble_packet.get_packet_type()
-        ))
-        print("Euler data: {}, Acceleration data: {}".ljust(80).format(
-            self.ble_packet.get_euler_data(), 
-            self.ble_packet.get_acc_data()
-        ))
-        print("Flex sensor data: {}".ljust(80).format(
-            self.ble_packet.get_flex_data()
-        ))
-        print("************************************************************************************************************")
-
-
-    # for testing
-    def unpack_packet(self):
-        #print("Bluno ID: {}, Packet type: {}, Euler data: {}, Acceleration data: {}".format(
-        #    self.ble_packet.get_beetle_id(), 
-        #    self.ble_packet.get_packet_type(),
-        #    self.ble_packet.get_euler_data(),
-        #    self.ble_packet.get_acc_data()
-        #))
-        pass
-
+        self.wait_for_data() 

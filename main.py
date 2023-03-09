@@ -29,9 +29,6 @@ class Controller(threading.Thread):
                 BlunoBeetle(params[1]), 
                 BlunoBeetleUDP(params[2])
             ]
-
-        # Packet buffer for ext comms
-        self.packet_queue = Queue()
         
         # For statistics calculation
         self.start_time = 0
@@ -80,8 +77,9 @@ class Controller(threading.Thread):
                 #message = input("Enter message to be sent: ")
                 #if message == 'q':
                 #    break
-                if not BlunoBeetle.packet_queue.empty():
-                    self.client_socket.send(BlunoBeetle.packet_queue.get())
+                data = BlunoBeetle.packet_queue.get()
+                #print(data)
+                self.client_socket.send(data)
             except Exception as _:
                 # traceback.print_exc()
                 self.close_connection()
@@ -116,11 +114,11 @@ class Controller(threading.Thread):
 
 if __name__ == '__main__':
     controller = Controller([
-        #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
-        #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
+        (1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
+        (2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
         #(3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
-        (1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
-        (2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
+        #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
+        #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         (3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
     ])
     controller.start()
