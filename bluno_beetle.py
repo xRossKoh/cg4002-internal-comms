@@ -12,7 +12,9 @@ import threading
 import time
 
 class BlunoBeetle(threading.Thread):
-    # Class variables
+   
+    #################### Class variables ####################
+
     # Store packets that are ready to be sent via ext comms
     packet_queue = Queue()
 
@@ -23,6 +25,8 @@ class BlunoBeetle(threading.Thread):
     # set when game state changes
     # clear when updated game state has been broadcasted to gun and vest
     game_state_changed = [threading.Event()]
+
+    #################### Init function ####################
 
     def __init__(self, params):
         super().__init__()
