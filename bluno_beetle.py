@@ -1,4 +1,4 @@
-from bluepy.btle import Peripheral, BTLEDisconnectError
+from bluepy.btle import Peripheral
 from crc import CRC
 from ble_packet import BLEPacket
 from read_delegate import ReadDelegate
@@ -23,8 +23,9 @@ class BlunoBeetle(threading.Thread):
 
     # threading event for game state change
     # set when game state changes
-    # clear when updated game state has been broadcasted to gun and vest
-    game_state_changed = [threading.Event()]
+    # clear when updated game state has been broadcasted to gun or vest
+    bullets_state_changed = [threading.Event()]
+    health_state_changed = [threading.Event()]
 
     #################### Init function ####################
 
@@ -212,6 +213,8 @@ class BlunoBeetle(threading.Thread):
             self.three_way_handshake()
             start_time = time.perf_counter()
             while not self.shutdown.is_set():
+                # TODO check for game state change and broadcast if necessary
+
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
                     start_time = time.perf_counter()

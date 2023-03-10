@@ -25,9 +25,9 @@ class Controller(threading.Thread):
         self.shutdown = threading.Event()
         
         self.beetles = [
-                BlunoBeetle(params[0]), 
-                BlunoBeetle(params[1]), 
-                BlunoBeetleUDP(params[2])
+                #BlunoBeetle(params[0]), 
+                #BlunoBeetle(params[1]), 
+                BlunoBeetleUDP(params[0])
             ]
         
         # For statistics calculation
@@ -57,7 +57,7 @@ class Controller(threading.Thread):
         # create thread for printing statistics
         print_thread = threading.Thread(target=self.print_statistics, args=())
 
-        for i in range(27):
+        for i in range(13):
             print()
 
         self.start_time = time.perf_counter()
@@ -87,7 +87,7 @@ class Controller(threading.Thread):
     # prints beetle data and statistics to std output
     def print_statistics(self):
         while True:
-            for i in range(27):
+            for i in range(13):
                 print(constant.LINE_UP, end="")
 
             print("***********************************************************************************************************")
@@ -114,12 +114,12 @@ class Controller(threading.Thread):
 
 if __name__ == '__main__':
     controller = Controller([
-        (1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
-        (2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
-        #(3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
+        #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
+        #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
+        (3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
         #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
-        (3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
+        #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
     ])
     controller.start()
    

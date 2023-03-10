@@ -15,19 +15,9 @@ class BLEPacket:
         self.flex_1 = 0
         self.flex_2 = 0
         self.set_crc(0)
+    
+    #################### Packeting ####################
 
-    def update_attributes(self, params):
-        self.header = params[0]
-        self.euler_x = params[1]
-        self.euler_y = params[2]
-        self.euler_z = params[3]
-        self.acc_x = params[4]
-        self.acc_y = params[5]
-        self.acc_z = params[6]
-        self.flex_1 = params[7]
-        self.flex_2 = params[8]
-        self.set_crc(params[9])
-   
     @dispatch()
     def pack(self):
         return struct.pack(PACKET_FORMAT_STRING,
@@ -60,16 +50,15 @@ class BLEPacket:
     # unpacks byte array and sets the attributes based on the packet data
     def unpack(self, packet):
         self.update_attributes(struct.unpack(PACKET_FORMAT_STRING, packet))
+    
+    #################### Getter functions ####################
 
     def get_header(self):
         return self.header
 
     def get_crc(self):
         return self.crc
-    
-    def set_crc(self, new_crc):
-        self.crc = new_crc
-
+     
     def get_beetle_id(self):
         return (self.header & 0xf0) >> 4
 
@@ -84,3 +73,21 @@ class BLEPacket:
 
     def get_flex_data(self):
         return [self.flex_1, self.flex_2]
+
+    #################### Setter functions ####################
+
+    def set_crc(self, new_crc):
+        self.crc = new_crc
+    
+    def update_attributes(self, params):
+        self.header = params[0]
+        self.euler_x = params[1]
+        self.euler_y = params[2]
+        self.euler_z = params[3]
+        self.acc_x = params[4]
+        self.acc_y = params[5]
+        self.acc_z = params[6]
+        self.flex_1 = params[7]
+        self.flex_2 = params[8]
+        self.set_crc(params[9])
+
