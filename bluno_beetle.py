@@ -98,7 +98,7 @@ class BlunoBeetle(threading.Thread):
     
     def generate_game_state_packet(self):
         node_id = self.node_id
-        packet_type = PacketType.DATA
+        packet_type = PacketType.ACK
         header = (node_id << 4) | packet_type
         data = [header, 
                 BlunoBeetle.players[0].ammo, 
@@ -108,11 +108,14 @@ class BlunoBeetle(threading.Thread):
         return self.ble_packet.pack(data)
 
     #################### Packet sending ####################
+    
+    def send_packet(self, packet):
+        c = self.write_service.getCharacteristics()[0]
+        c.write(packet)
 
     def send_default_packet(self, packet_type):
-        c = self.write_service.getCharacteristics()[0]
-        c.write(self.default_packets[int(packet_type)])
-    
+        self.send_packet(self.default_packets[int(packet_type)])
+        
     #################### Checks ####################
 
     def crc_check(self):
@@ -158,7 +161,7 @@ class BlunoBeetle(threading.Thread):
             self.ble_packet.get_flex_data()
         ))
 
-    #################### Communication protocl ####################
+    #################### Communication protocol ####################
 
     def three_way_handshake(self):
         while not self.is_connected:
@@ -213,21 +216,22 @@ class BlunoBeetle(threading.Thread):
             self.three_way_handshake()
             start_time = time.perf_counter()
             while not self.shutdown.is_set():
-                # TODO check for game state change and broadcast if necessary
-
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
                     start_time = time.perf_counter()
 
-                    # check if a full packet is in buffer
+                    # fragmented packet received in buffer
                     if self.delegate.buffer_len < PACKET_SIZE:
                         self.fragmented_packet_count += 1
+                        self.send_packet(self.generate_game_state_packet()) 
                         continue
                     
                     # full packet in buffer
                     self.process_data()
                     self.processed_bit_count += PACKET_SIZE * 8
                     continue
+                
+                self.send_packet(self.generate_game_state_packet())
 
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= 2.5:

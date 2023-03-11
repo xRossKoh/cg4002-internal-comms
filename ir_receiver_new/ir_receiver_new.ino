@@ -14,9 +14,9 @@ typedef struct
 {
   uint8_t header;           // contains beetle id and packet type
   uint8_t padding;          // Padding header to 2 bytes
-  int yaw;              // contains IR data for data packet for IR sensors
-  int pitch;              // all other fields padded with 0 for data packet for IR sensors
-  int roll;
+  int euler_x;              // contains IR data for data packet for IR sensors
+  int euler_y;              // all other fields padded with 0 for data packet for IR sensors
+  int euler_z;
   int acc_x;
   int acc_y;
   int acc_z;
@@ -78,9 +78,9 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
   BLEPacket p;
   p.header = (1 << 4) | packet_type;
   p.padding = 0;
-  p.yaw = data[0];
-  p.pitch = data[1];
-  p.roll = data[2];
+  p.euler_x = data[0];
+  p.euler_y = data[1];
+  p.euler_z = data[2];
   p.acc_x = data[3];
   p.acc_y = data[4];
   p.acc_z = data[5];
@@ -117,7 +117,7 @@ void sendDefaultPacket(PacketType packet_type)
 
 void updateGameState()
 {
-  health = curr_packet->pitch;
+  health = curr_packet->euler_y;
 }
 
 /*---------------- Communication protocol ----------------*/

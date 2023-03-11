@@ -13,7 +13,7 @@ class BlunoBeetleUDP(BlunoBeetle):
             # for testing
             #self.print_test_data()
 
-
+    """
     def wait_for_data(self):
         try:
             self.three_way_handshake()
@@ -45,3 +45,4 @@ class BlunoBeetleUDP(BlunoBeetle):
             #print(e)
             self.reconnect()
             self.wait_for_data()
+    """

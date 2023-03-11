@@ -12,11 +12,11 @@ enum PacketType
 
 typedef struct
 {
-  uint8_t header;           // contains beetle id and packet type
-  uint8_t padding;          // Padding header to 2 bytes
-  int yaw;              // contains IR data for data packet for IR sensors
-  int pitch;              // all other fields padded with 0 for data packet for IR sensors
-  int roll;
+  uint8_t header;           // 1 byte header: 4 bit node id | 2 bit packet type | 2 bit sequence no
+  uint8_t padding;          // padding header to 2 bytes
+  int euler_x;              // contains IR data for data packet for IR sensors
+  int euler_y;              // all other fields padded with 0 for data packet for IR sensors
+  int euler_z;
   int acc_x;
   int acc_y;
   int acc_z;
@@ -28,9 +28,12 @@ typedef struct
 /*---------------- Global variables ----------------*/
 
 const unsigned int PACKET_SIZE = 20;
+const int[] default_data = {0, 0, 0, 0, 0, 0, 0, 0};
+const int[] shoot_data = {1, 0, 0, 0, 0, 0, 0, 0};
 
 static unsigned int bullets = 6;
 static unsigned int numShots = 0;
+static unsigned int nextSeqNo = 0;
 
 uint8_t serial_buffer[PACKET_SIZE];
 BLEPacket* curr_packet;
@@ -66,8 +69,15 @@ bool packetCheck(uint8_t node_id, PacketType packet_type)
 {
   uint8_t header = curr_packet->header;
   uint8_t curr_node_id = (header & 0xf0) >> 4;
-  PacketType curr_packet_type = PacketType(header & 0xf);
+  PacketType curr_packet_type = PacketType((header & 0b1100) >> 2);
   return curr_node_id == node_id && curr_packet_type == packet_type;
+}
+
+bool seqNoCheck()
+{
+  uint8_t header = curr_packet->header;
+  unsigned int curr_seq_no = header & 0b11;
+  return curr_seq_no == nextSeqNo;
 }
 
 /*---------------- Packet management ----------------*/
@@ -76,11 +86,11 @@ bool packetCheck(uint8_t node_id, PacketType packet_type)
 BLEPacket generatePacket(PacketType packet_type, int* data)
 {
   BLEPacket p;
-  p.header = (1 << 4) | packet_type;
+  p.header = (1 << 4) | (packet_type << 2) | nextSeqNo;
   p.padding = 0;
-  p.yaw = data[0];
-  p.pitch = data[1];
-  p.roll = data[2];
+  p.euler_x = data[0];
+  p.euler_y = data[1];
+  p.euler_z = data[2];
   p.acc_x = data[3];
   p.acc_y = data[4];
   p.acc_z = data[5];
@@ -94,11 +104,9 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
 
 void generateDefaultPackets()
 {
-  int data[] = {0, 0, 0, 0, 0, 0, 0, 0};
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 3; i++)
   {
-    if (i == 3) data[0] = 1;
-    default_packets[i] = generatePacket(PacketType(i), data);
+    default_packets[i] = generatePacket(PacketType(i), default_data);
   }
 }
 
@@ -107,17 +115,17 @@ void sendDefaultPacket(PacketType packet_type)
   Serial.write((byte*)&default_packets[packet_type], PACKET_SIZE);
 }
 
-//void sendDataPacket(int* data)
-//{
-//  BLEPacket p = generatePacket(DATA, data);
-//  Serial.write((byte*)&p, PACKET_SIZE);
-//}
+void sendDataPacket()
+{
+  BLEPacket p = generatePacket(DATA, shoot_data);
+  Serial.write((byte*)&p, PACKET_SIZE);
+}
 
 /*---------------- Game state handler ----------------*/
 
 void updateGameState()
 {
-  bullets = curr_packet->yaw;
+  bullets = curr_packet->euler_x;
 }
 
 /*---------------- Communication protocol ----------------*/
@@ -174,7 +182,38 @@ void setup() {
 /*---------------- Main ----------------*/
 
 void loop() {
-  if (Serial.available())
+  if (numShots > 0)
+  {
+    bool is_ack = false;
+    while (!is_ack)
+    {
+      sendDataPacket();
+      waitForData();
+      if (!crcCheck()) continue;
+      if (packetCheck(0, ACK) && seqNoCheck())
+      {
+        numShots--;
+        nextSeqNo++;
+        nextSeqNo %= 2;
+        updateGameState();
+        is_ack = true;
+      }
+      else if (packetCheck(0, HELLO))
+      {
+        sendDefaultPacket(HELLO);
+      
+        // wait for ack from laptop
+        waitForData();
+  
+        if (crcCheck() && packetCheck(0, ACK))
+        {
+          updateGameState();
+          is_ack = true;
+        }
+      }
+    }
+  }
+  else if (Serial.available())
   {
     waitForData();
     if (!crcCheck()) return;
@@ -190,40 +229,9 @@ void loop() {
         updateGameState();
       }
     }
-    else if (packetCheck(0, ACK)) // game state broadcast
+    else if (packetCheck(0, ACK) && seqNoCheck()) // game state broadcast
     {
       updateGameState();
-      sendDefaultPacket(ACK);
-    }
-  }
-
-  if (numShots > 0)
-  {
-    bool is_ack = false;
-    while (!is_ack)
-    {
-      sendDefaultPacket(DATA);
-      waitForData();
-      if (!crcCheck()) continue;
-      if (packetCheck(0, ACK))
-      {
-        updateGameState();
-        is_ack = true;
-        numShots--;
-      }
-      else if (packetCheck(0, HELLO))
-      {
-        sendDefaultPacket(HELLO);
-      
-        // wait for ack from laptop
-        waitForData();
-  
-        if (crcCheck() && packetCheck(0, ACK))
-        {
-          updateGameState();
-          is_ack = true;
-        }
-      }
     }
   }
 }
