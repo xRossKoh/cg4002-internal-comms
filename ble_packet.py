@@ -61,9 +61,13 @@ class BLEPacket:
      
     def get_beetle_id(self):
         return (self.header & 0xf0) >> 4
-
+    
     def get_packet_type(self):
-        return self.header & 0xf
+        return (self.header & 0b1100) >> 2
+
+    # Used for new format
+    def get_seq_no(self):
+        return self.header & 0b1
 
     def get_euler_data(self):
         return [self.euler_x, self.euler_y, self.euler_z]

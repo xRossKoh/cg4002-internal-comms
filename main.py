@@ -1,14 +1,43 @@
-from bluno_beetle import BlunoBeetle
+from bluno_beetle_game_state import BlunoBeetleGameState
 from bluno_beetle_udp import BlunoBeetleUDP
 from _socket import SHUT_RDWR
-from queue import Queue
+from collections import deque
+#from ble_packet import BLEPacket
 
+#import asyncio
 import constant
 import socket
 import threading
 import traceback
 import time
 
+"""
+class WebSocketClient:
+    def __init__(self, host_name, port_num):
+        self.server_address = f"ws://{host_name}:{port_num}"
+
+        # self.lock = asyncio.Lock()
+
+        self.ble_packet = BLEPacket()
+
+    async def send(self):
+        async with websockets.connect(self.server_address) as websocket:
+            print('Connected to Ultra96')
+            while True:
+                try:
+                    sent = await websocket.send("Hello".encode())
+                except websockets.exceptions.ConnectionClosedError:
+                    print('Server closed the connection prematurely.')
+                    return
+
+    async def receive_packet(self):
+        message = await self.websocket.recv()
+        self.ble_packet.unpack(message)
+        print("CRC: ", self.packer.get_crc())
+
+    async def run(self):
+        await self.send()
+"""
 class Controller(threading.Thread):
     def __init__(self, params):
         super().__init__()
@@ -25,8 +54,8 @@ class Controller(threading.Thread):
         self.shutdown = threading.Event()
         
         self.beetles = [
-                #BlunoBeetle(params[0]), 
-                #BlunoBeetle(params[1]), 
+                BlunoBeetleGameState(params[0]), 
+                BlunoBeetleGameState(params[1]), 
                 BlunoBeetleUDP(params[0])
             ]
         
@@ -35,7 +64,9 @@ class Controller(threading.Thread):
         self.prev_time = 0
         self.prev_processed_bit_count = 0
         self.current_data_rate = 0
-       
+
+        #self.client = Client()
+
     def setup(self):
         print('Setting up Secret Key')
         print('Default Secret Key: chrisisdabest123')
@@ -52,20 +83,22 @@ class Controller(threading.Thread):
         self.client_socket.close()
 
         print("Shutting Down Connection")
-  
+
     def run_threads(self):
         # create thread for printing statistics
         print_thread = threading.Thread(target=self.print_statistics, args=())
-
-        for i in range(13):
+        
+        for i in range(27):
             print()
 
         self.start_time = time.perf_counter()
 
+        #self.client.start()
+
         for beetle in self.beetles:
             beetle.start()
 
-        print_thread.start()
+        #print_thread.start()
     
     # run() function invoked by thread.start()
     def run(self):
@@ -74,10 +107,10 @@ class Controller(threading.Thread):
 
         while not self.shutdown.is_set():
             try:
-                #message = input("Enter message to be sent: ")
-                #if message == 'q':
-                #    break
-                data = BlunoBeetle.packet_queue.get()
+                if not BlunoBeetle.packet_queue:
+                    continue
+                
+                data = BlunoBeetle.packet_queue.popleft()
                 #print(data)
                 self.client_socket.send(data)
             except Exception as _:
@@ -87,7 +120,7 @@ class Controller(threading.Thread):
     # prints beetle data and statistics to std output
     def print_statistics(self):
         while True:
-            for i in range(13):
+            for i in range(27):
                 print(constant.LINE_UP, end="")
 
             print("***********************************************************************************************************")
@@ -111,15 +144,15 @@ class Controller(threading.Thread):
             print("No. of fragmented packets: {}".ljust(80).format(fragmented_packet_count))
             print("************************************************************************************************************")
 
-
 if __name__ == '__main__':
+    #client = WebSocketClient("localhost", 8080)
+    #asyncio.run(client.run())
     controller = Controller([
-        #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
+        (1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
         #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
+        (2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         (3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
-        #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
     ])
     controller.start()
-   

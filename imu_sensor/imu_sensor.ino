@@ -57,7 +57,7 @@ bool packetCheck(uint8_t node_id, PacketType packet_type)
 {
   uint8_t header = curr_packet->header;
   uint8_t curr_node_id = (header & 0xf0) >> 4;
-  PacketType curr_packet_type = PacketType(header & 0xf);
+  PacketType curr_packet_type = PacketType((header & 0b1100) >> 2);
   return curr_node_id == node_id && curr_packet_type == packet_type;
 }
 
@@ -79,7 +79,7 @@ void waitForData()
 BLEPacket generatePacket(PacketType packet_type, int* data)
 {
   BLEPacket p;
-  p.header = (3 << 4) | packet_type;
+  p.header = (3 << 4) | (packet_type << 2) | 0;
   p.padding = 0;
   p.euler_x = data[0];
   p.euler_y = data[1];

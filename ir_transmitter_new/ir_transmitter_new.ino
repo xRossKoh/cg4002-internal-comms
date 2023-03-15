@@ -28,17 +28,17 @@ typedef struct
 /*---------------- Global variables ----------------*/
 
 const unsigned int PACKET_SIZE = 20;
-const int[] default_data = {0, 0, 0, 0, 0, 0, 0, 0};
-const int[] shoot_data = {1, 0, 0, 0, 0, 0, 0, 0};
+const unsigned int PKT_THRESHOLD = 5;
+const int default_data[] = {0, 0, 0, 0, 0, 0, 0, 0};
+const int shoot_data[] = {1, 0, 0, 0, 0, 0, 0, 0};
 
 static unsigned int bullets = 6;
 static unsigned int numShots = 0;
-static unsigned int nextSeqNo = 0;
+static unsigned int seqNo = 1;
+static unsigned int counter = 0;
 
 uint8_t serial_buffer[PACKET_SIZE];
 BLEPacket* curr_packet;
-
-BLEPacket default_packets[4];
 
 /*---------------- CRC calculation ----------------*/
 
@@ -76,8 +76,8 @@ bool packetCheck(uint8_t node_id, PacketType packet_type)
 bool seqNoCheck()
 {
   uint8_t header = curr_packet->header;
-  unsigned int curr_seq_no = header & 0b11;
-  return curr_seq_no == nextSeqNo;
+  uint8_t curr_seq_no = header & 0b1;
+  return curr_seq_no != seqNo;
 }
 
 /*---------------- Packet management ----------------*/
@@ -86,7 +86,7 @@ bool seqNoCheck()
 BLEPacket generatePacket(PacketType packet_type, int* data)
 {
   BLEPacket p;
-  p.header = (1 << 4) | (packet_type << 2) | nextSeqNo;
+  p.header = (1 << 4) | (packet_type << 2) | seqNo;
   p.padding = 0;
   p.euler_x = data[0];
   p.euler_y = data[1];
@@ -102,23 +102,21 @@ BLEPacket generatePacket(PacketType packet_type, int* data)
   return p;
 }
 
-void generateDefaultPackets()
+void sendPacket(PacketType packet_type, int* data)
 {
-  for (int i = 0; i < 3; i++)
-  {
-    default_packets[i] = generatePacket(PacketType(i), default_data);
-  }
+  BLEPacket p = generatePacket(packet_type, data);
+  Serial.write((byte*)&p, PACKET_SIZE);
 }
 
 void sendDefaultPacket(PacketType packet_type)
 {
-  Serial.write((byte*)&default_packets[packet_type], PACKET_SIZE);
+  sendPacket(packet_type, default_data);
 }
 
 void sendDataPacket()
 {
-  BLEPacket p = generatePacket(DATA, shoot_data);
-  Serial.write((byte*)&p, PACKET_SIZE);
+  int data[] = {counter, 0, 0, bullets, 0, 0, 0, 0};
+  sendPacket(DATA, data);
 }
 
 /*---------------- Game state handler ----------------*/
@@ -159,6 +157,9 @@ void threeWayHandshake()
       continue;
     } 
     sendDefaultPacket(HELLO);
+
+    // reset seq no
+    seqNo = 1;
     
     // wait for ack from laptop
     waitForData();
@@ -175,36 +176,59 @@ void threeWayHandshake()
 
 void setup() {
   Serial.begin(115200);
-  generateDefaultPackets();
   threeWayHandshake();
 }
 
 /*---------------- Main ----------------*/
 
+unsigned int count = 0;
+
 void loop() {
+  delay(100);
+  count++;
+  count %= 10;
+  if (count == 0) numShots++;
   if (numShots > 0)
   {
+    // increment sequence number for next packet
+    seqNo++;
+    seqNo %= 2;
+
+    // initialize loop variables
+    unsigned int pkt_count = 0;
     bool is_ack = false;
+
     while (!is_ack)
     {
-      sendDataPacket();
+      // only send data packet if the number of received ACKs has exceeded threshold
+      if (pkt_count == 0) sendDataPacket();
+
+      // receive and buffer serial data
       waitForData();
+
+      // increment packet count
+      pkt_count++;
+      pkt_count %= PKT_THRESHOLD;
+      
+      // do checks on received data
       if (!crcCheck()) continue;
       if (packetCheck(0, ACK) && seqNoCheck())
       {
         numShots--;
-        nextSeqNo++;
-        nextSeqNo %= 2;
+        counter++;
         updateGameState();
         is_ack = true;
       }
-      else if (packetCheck(0, HELLO))
+      else if (packetCheck(0, HELLO)) // reinitiate 3-way handshake
       {
         sendDefaultPacket(HELLO);
-      
+
+        // reset seq no
+        seqNo = 1;
+        
         // wait for ack from laptop
         waitForData();
-  
+        
         if (crcCheck() && packetCheck(0, ACK))
         {
           updateGameState();
@@ -213,17 +237,20 @@ void loop() {
       }
     }
   }
-  else if (Serial.available())
+  else
   {
     waitForData();
     if (!crcCheck()) return;
     if (packetCheck(0, HELLO)) // reinitiate 3-way handshake
     {
       sendDefaultPacket(HELLO);
-  
+
+      // reset seq no
+      seqNo = 1;
+      
       // wait for ack from laptop
       waitForData();
-
+      
       if (crcCheck() && packetCheck(0, ACK))
       {
         updateGameState();

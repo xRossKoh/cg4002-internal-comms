@@ -5,27 +5,24 @@ from read_delegate import ReadDelegate
 from struct import *
 from packet_type import PacketType
 from constant import PACKET_SIZE
-from queue import Queue
 from game_state import GameState
+from collections import deque
 
 import threading
 import time
+
+# TODO implement sequence number and checking
+# TODO refactor packet handling to support new header format
 
 class BlunoBeetle(threading.Thread):
    
     #################### Class variables ####################
 
     # Store packets that are ready to be sent via ext comms
-    packet_queue = Queue()
+    packet_queue = deque()
 
     # Variables used to maintain gamestate
     players = [GameState()]
-
-    # threading event for game state change
-    # set when game state changes
-    # clear when updated game state has been broadcasted to gun or vest
-    bullets_state_changed = [threading.Event()]
-    health_state_changed = [threading.Event()]
 
     #################### Init function ####################
 
@@ -46,8 +43,9 @@ class BlunoBeetle(threading.Thread):
         self.fragmented_packet_count = 0
         self.processed_bit_count = 0
         self.shutdown = threading.Event()
-
         self.generate_default_packets()
+
+        #self.counter = 0
     
     #################### Getter functions ####################
 
@@ -91,22 +89,11 @@ class BlunoBeetle(threading.Thread):
         for i in range(3):
             node_id = self.node_id
             packet_type = i
-            header = (node_id << 4) | packet_type
+            header = (node_id << 4) | (packet_type << 2) | 0
             data = [header, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             data[9] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
-    
-    def generate_game_state_packet(self):
-        node_id = self.node_id
-        packet_type = PacketType.ACK
-        header = (node_id << 4) | packet_type
-        data = [header, 
-                BlunoBeetle.players[0].ammo, 
-                BlunoBeetle.players[0].health,
-                0, 0, 0, 0, 0, 0, 0]
-        data[9] = self.crc.calc(self.ble_packet.pack(data))
-        return self.ble_packet.pack(data)
-
+     
     #################### Packet sending ####################
     
     def send_packet(self, packet):
@@ -115,6 +102,7 @@ class BlunoBeetle(threading.Thread):
 
     def send_default_packet(self, packet_type):
         self.send_packet(self.default_packets[int(packet_type)])
+        #print(self.default_packets[int(packet_type)])
         
     #################### Checks ####################
 
@@ -128,8 +116,8 @@ class BlunoBeetle(threading.Thread):
             return self.ble_packet.get_beetle_id() == self.beetle_id and PacketType(self.ble_packet.get_packet_type()) == packet_type
         except ValueError:
             # intialize reconnect to reset connection and buffer
-            self.reconnect();
-            self.wait_for_data();
+            self.reconnect()
+            self.wait_for_data()
     
     ################ Print functions ####################
     
@@ -146,6 +134,7 @@ class BlunoBeetle(threading.Thread):
         ))
         print("Flex sensor data: {}".ljust(80).format(
             self.ble_packet.get_flex_data()
+            #self.counter
         ))
         print("************************************************************************************************************")
     
@@ -198,7 +187,7 @@ class BlunoBeetle(threading.Thread):
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
                                   
     def add_packet_to_queue(self):
-        BlunoBeetle.packet_queue.put(self.ble_packet.pack())
+        BlunoBeetle.packet_queue.append(self.ble_packet.pack())
 
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
@@ -222,16 +211,13 @@ class BlunoBeetle(threading.Thread):
 
                     # fragmented packet received in buffer
                     if self.delegate.buffer_len < PACKET_SIZE:
-                        self.fragmented_packet_count += 1
-                        self.send_packet(self.generate_game_state_packet()) 
+                        self.fragmented_packet_count += 1 
                         continue
                     
                     # full packet in buffer
                     self.process_data()
                     self.processed_bit_count += PACKET_SIZE * 8
                     continue
-                
-                self.send_packet(self.generate_game_state_packet())
 
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= 2.5:
@@ -247,6 +233,7 @@ class BlunoBeetle(threading.Thread):
             self.wait_for_data()
 
     #################### Main function ####################
+    
     def run(self):
         self.connect()
-        self.wait_for_data() 
+        self.wait_for_data()

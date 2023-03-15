@@ -4,7 +4,7 @@ from packet_type import PacketType
 class BlunoBeetleUDP(BlunoBeetle):
     def __init__(self, params):
         super().__init__(params)
-
+       
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
         if self.crc_check() and self.packet_check(PacketType.DATA):
@@ -12,7 +12,7 @@ class BlunoBeetleUDP(BlunoBeetle):
 
             # for testing
             #self.print_test_data()
-
+   
     """
     def wait_for_data(self):
         try:
@@ -30,7 +30,7 @@ class BlunoBeetleUDP(BlunoBeetle):
                     
                     # full packet in buffer
                     self.process_data()
-                    self.processed_bit_count += PACKET_SIZE * 8
+                    self.processed_bit_count += PACKET_SIZE * 8 
                     continue
 
                 # no packet received, check for timeout
