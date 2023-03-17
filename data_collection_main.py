@@ -1,3 +1,9 @@
+import sys
+
+# importing necessary module directories
+sys.path.append('/home/kenneth/Desktop/CG4002/scripts/bluno_beetle')
+sys.path.append('/home/kenneth/Desktop/CG4002/scripts/helper')
+
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_udp import BlunoBeetleUDP
 from _socket import SHUT_RDWR
