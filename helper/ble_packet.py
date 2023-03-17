@@ -63,7 +63,8 @@ class BLEPacket:
         return (self.header & 0xf0) >> 4
     
     def get_packet_type(self):
-        return (self.header & 0b1100) >> 2
+        return self.header & 0xf
+        #return (self.header & 0b1100) >> 2
 
     # Used for new format
     def get_seq_no(self):

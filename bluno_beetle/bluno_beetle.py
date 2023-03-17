@@ -11,9 +11,6 @@ from collections import deque
 import threading
 import time
 
-# TODO implement sequence number and checking
-# TODO refactor packet handling to support new header format
-
 class BlunoBeetle(threading.Thread):
    
     #################### Class variables ####################
@@ -89,7 +86,7 @@ class BlunoBeetle(threading.Thread):
         for i in range(3):
             node_id = self.node_id
             packet_type = i
-            header = (node_id << 4) | (packet_type << 2) | 0
+            header = (node_id << 4) | packet_type
             data = [header, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             data[9] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))

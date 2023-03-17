@@ -145,7 +145,7 @@ void setup() {
 }
 
 void loop() {
-  delay(2000);
+//  delay(2000);
   int data[8];
   for (int i = 0; i < 8; i++)
   {

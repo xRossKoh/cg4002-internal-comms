@@ -1,8 +1,14 @@
+import sys
+
+# importing necessary module directories
+sys.path.append('/home/kenneth/Desktop/CG4002/scripts/bluno_beetle')
+sys.path.append('/home/kenneth/Desktop/CG4002/scripts/helper')
+
+from bluno_beetle import BlunoBeetle
 from bluno_beetle_game_state import BlunoBeetleGameState
 from bluno_beetle_udp import BlunoBeetleUDP
 from _socket import SHUT_RDWR
 from collections import deque
-#from ble_packet import BLEPacket
 
 #import asyncio
 import constant
@@ -54,9 +60,9 @@ class Controller(threading.Thread):
         self.shutdown = threading.Event()
         
         self.beetles = [
-                BlunoBeetleGameState(params[0]), 
-                BlunoBeetleGameState(params[1]), 
-                BlunoBeetleUDP(params[0])
+                BlunoBeetle(params[0]), 
+                BlunoBeetle(params[1]), 
+                BlunoBeetleUDP(params[2])
             ]
         
         # For statistics calculation
@@ -64,6 +70,8 @@ class Controller(threading.Thread):
         self.prev_time = 0
         self.prev_processed_bit_count = 0
         self.current_data_rate = 0
+
+        #self.data = b''
 
         #self.client = Client()
 
@@ -83,11 +91,25 @@ class Controller(threading.Thread):
         self.client_socket.close()
 
         print("Shutting Down Connection")
+    """
+    def receive_game_state(self):
+        while not self.shutdown.is_set():
+            message = self.client_socket.recv(128)
+            
+            self.data = self.data + message
 
+            if len(self.data) < 30:
+                continue
+
+            packet = self.data[:30]
+            self.data = self.data[30:]
+            
+            print(packet)
+    """
     def run_threads(self):
         # create thread for printing statistics
         print_thread = threading.Thread(target=self.print_statistics, args=())
-        
+        #receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
         for i in range(27):
             print()
 
@@ -98,7 +120,8 @@ class Controller(threading.Thread):
         for beetle in self.beetles:
             beetle.start()
 
-        #print_thread.start()
+        print_thread.start()
+        #receive_thread.start()
     
     # run() function invoked by thread.start()
     def run(self):
@@ -107,6 +130,8 @@ class Controller(threading.Thread):
 
         while not self.shutdown.is_set():
             try:
+                #data = input("Enter char: ")
+
                 if not BlunoBeetle.packet_queue:
                     continue
                 
@@ -115,7 +140,8 @@ class Controller(threading.Thread):
                 self.client_socket.send(data)
             except Exception as _:
                 # traceback.print_exc()
-                self.close_connection()
+                #self.close_connection()
+                continue
     
     # prints beetle data and statistics to std output
     def print_statistics(self):

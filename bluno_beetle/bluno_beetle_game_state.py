@@ -55,7 +55,7 @@ class BlunoBeetleGameState(BlunoBeetle):
     def three_way_handshake(self):
         while not self.is_connected:
             self.send_game_state_packet(PacketType.HELLO)
-            print("Initiated 3-way handshake with beetle {}...\r".format(self.beetle_id))
+            #print("Initiated 3-way handshake with beetle {}...\r".format(self.beetle_id))
 
             start_time = time.perf_counter()
             tle = False
@@ -75,7 +75,7 @@ class BlunoBeetleGameState(BlunoBeetle):
 
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
-                print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
+                #print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
                 continue
 
             # else reply with ack
@@ -87,7 +87,7 @@ class BlunoBeetleGameState(BlunoBeetle):
             # reset seq no
             self.seq_no = 0
 
-            print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
+            #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
 
 
     def wait_for_data(self):
@@ -111,13 +111,13 @@ class BlunoBeetleGameState(BlunoBeetle):
                 
                 # send game state update every 0.1s if no packet received
                 if time.perf_counter() - ack_time >= 0.1:
-                    print("Game state update")
+                    #print("Game state update")
                     self.send_game_state_packet(PacketType.ACK)
                     ack_time = time.perf_counter()
 
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= 2.5:
-                    print("Timeout")
+                    #print("Timeout")
                     self.reconnect()
                     start_time = time.perf_counter()
                     ack_time = time.perf_counter()
@@ -126,7 +126,7 @@ class BlunoBeetleGameState(BlunoBeetle):
             self.disconnect()
             print("Beetle ID {} terminated".format(self.beetle_id))
         except Exception as e:
-            print(e)
+            #print(e)
             self.reconnect()
             self.wait_for_data()
 
