@@ -1,8 +1,8 @@
 # Packet size in bytes
-PACKET_SIZE = 20
+PACKET_SIZE = 16
 
 # Packet format string for use with struct library
-PACKET_FORMAT_STRING = "Bx8hH"
+PACKET_FORMAT_STRING = "Bx6hH"
 
 # Escape character to return cursor to previous line
 LINE_UP = '\033[F'

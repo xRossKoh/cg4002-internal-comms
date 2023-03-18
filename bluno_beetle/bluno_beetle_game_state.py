@@ -19,8 +19,8 @@ class BlunoBeetleGameState(BlunoBeetle):
         data = [header, 
                 BlunoBeetle.players[0].bullets, 
                 BlunoBeetle.players[0].health,
-                0, 0, 0, 0, 0, 0, 0]
-        data[9] = self.crc.calc(self.ble_packet.pack(data))
+                0, 0, 0, 0, 0]
+        data[7] = self.crc.calc(self.ble_packet.pack(data))
         return self.ble_packet.pack(data)
 
     #################### Packet sending ####################
@@ -116,11 +116,11 @@ class BlunoBeetleGameState(BlunoBeetle):
                     ack_time = time.perf_counter()
 
                 # no packet received, check for timeout
-                if time.perf_counter() - start_time >= 2.5:
-                    #print("Timeout")
-                    self.reconnect()
-                    start_time = time.perf_counter()
-                    ack_time = time.perf_counter()
+                #if time.perf_counter() - start_time >= 2.5:
+                #    print("Timeout")
+                #    self.reconnect()
+                #    start_time = time.perf_counter()
+                #    ack_time = time.perf_counter()
 
             # shutdown connection and terminate thread
             self.disconnect()

@@ -12,8 +12,6 @@ class BLEPacket:
         self.acc_x = 0
         self.acc_y = 0
         self.acc_z = 0
-        self.flex_1 = 0
-        self.flex_2 = 0
         self.set_crc(0)
     
     #################### Packeting ####################
@@ -28,8 +26,6 @@ class BLEPacket:
                 self.acc_x,
                 self.acc_y,
                 self.acc_z,
-                self.flex_1,
-                self.flex_2,
                 self.crc)
 
     @dispatch(list)
@@ -43,8 +39,6 @@ class BLEPacket:
                 self.acc_x,
                 self.acc_y,
                 self.acc_z,
-                self.flex_1,
-                self.flex_2,
                 self.crc)
 
     # unpacks byte array and sets the attributes based on the packet data
@@ -76,9 +70,6 @@ class BLEPacket:
     def get_acc_data(self):
         return [self.acc_x, self.acc_y, self.acc_z]
 
-    def get_flex_data(self):
-        return [self.flex_1, self.flex_2]
-
     #################### Setter functions ####################
 
     def set_crc(self, new_crc):
@@ -92,7 +83,5 @@ class BLEPacket:
         self.acc_x = params[4]
         self.acc_y = params[5]
         self.acc_z = params[6]
-        self.flex_1 = params[7]
-        self.flex_2 = params[8]
-        self.set_crc(params[9])
+        self.set_crc(params[7])
 

@@ -87,8 +87,8 @@ class BlunoBeetle(threading.Thread):
             node_id = self.node_id
             packet_type = i
             header = (node_id << 4) | packet_type
-            data = [header, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            data[9] = self.crc.calc(self.ble_packet.pack(data))
+            data = [header, 0, 0, 0, 0, 0, 0, 0]
+            data[7] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
      
     #################### Packet sending ####################
@@ -119,19 +119,14 @@ class BlunoBeetle(threading.Thread):
     ################ Print functions ####################
     
     def print_beetle_info(self):
-        print("Beetle {}".ljust(80).format(self.beetle_id))
-        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
-        print("Last processed packet:".ljust(80))
-        print("Packet type: {}".ljust(80).format(
+        print("Beetle {}, Packet type {}".ljust(80).format(
+            self.beetle_id,
             self.ble_packet.get_packet_type()
         ))
-        print("Euler data: {}, Acceleration data: {}".ljust(80).format(
+        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(80))
+        print("Eul data: {}, Acc data: {}".ljust(80).format(
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data()
-        ))
-        print("Flex sensor data: {}".ljust(80).format(
-            self.ble_packet.get_flex_data()
-            #self.counter
         ))
         print("************************************************************************************************************")
     
@@ -141,10 +136,9 @@ class BlunoBeetle(threading.Thread):
             self.ble_packet.get_beetle_id(), 
             self.ble_packet.get_packet_type()
         ))
-        print("Euler data: {}, Acceleration data: {}, Flex data: {}".format(
+        print("Euler data: {}, Acceleration data: {}".format(
             self.ble_packet.get_euler_data(),
             self.ble_packet.get_acc_data(),
-            self.ble_packet.get_flex_data()
         ))
 
     #################### Communication protocol ####################
@@ -217,9 +211,9 @@ class BlunoBeetle(threading.Thread):
                     continue
 
                 # no packet received, check for timeout
-                if time.perf_counter() - start_time >= 2.5:
-                    self.reconnect()
-                    start_time = time.perf_counter()
+                #if time.perf_counter() - start_time >= 2.5:
+                #    self.reconnect()
+                #    start_time = time.perf_counter()
 
             # shutdown connection and terminate thread
             self.disconnect()

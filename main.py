@@ -110,7 +110,7 @@ class Controller(threading.Thread):
         # create thread for printing statistics
         print_thread = threading.Thread(target=self.print_statistics, args=())
         #receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
-        for i in range(27):
+        for i in range(18):
             print()
 
         self.start_time = time.perf_counter()
@@ -146,7 +146,7 @@ class Controller(threading.Thread):
     # prints beetle data and statistics to std output
     def print_statistics(self):
         while True:
-            for i in range(27):
+            for i in range(18):
                 print(constant.LINE_UP, end="")
 
             print("***********************************************************************************************************")
