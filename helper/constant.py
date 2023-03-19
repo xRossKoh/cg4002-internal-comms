@@ -1,6 +1,9 @@
 # Packet size in bytes
 PACKET_SIZE = 16
 
+# Number of data fields in packet
+PACKET_FIELDS = 8
+
 # Packet format string for use with struct library
 PACKET_FORMAT_STRING = "Bx6hH"
 

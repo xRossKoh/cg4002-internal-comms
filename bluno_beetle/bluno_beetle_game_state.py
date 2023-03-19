@@ -1,6 +1,6 @@
 from bluno_beetle import BlunoBeetle
 from packet_type import PacketType
-from constant import PACKET_SIZE
+from constant import PACKET_SIZE, PACKET_FIELDS
 
 import time
 
@@ -14,13 +14,13 @@ class BlunoBeetleGameState(BlunoBeetle):
     #################### Packet generation ####################
 
     def generate_game_state_packet(self, packet_type):
+        data = [0] * PACKET_FIELDS
         node_id = self.node_id
         header = (node_id << 4) | (packet_type << 2) | self.seq_no
-        data = [header, 
-                BlunoBeetle.players[0].bullets, 
-                BlunoBeetle.players[0].health,
-                0, 0, 0, 0, 0]
-        data[7] = self.crc.calc(self.ble_packet.pack(data))
+        data[0] = header
+        data[1] = BlunoBeetle.players[0].bullets
+        data[2] = BlunoBeetle.players[0].health
+        data[-1] = self.crc.calc(self.ble_packet.pack(data))
         return self.ble_packet.pack(data)
 
     #################### Packet sending ####################

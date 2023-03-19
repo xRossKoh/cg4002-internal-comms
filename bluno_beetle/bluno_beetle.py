@@ -4,7 +4,7 @@ from ble_packet import BLEPacket
 from read_delegate import ReadDelegate
 from struct import *
 from packet_type import PacketType
-from constant import PACKET_SIZE
+from constant import PACKET_SIZE, PACKET_FIELDS
 from game_state import GameState
 from collections import deque
 
@@ -18,30 +18,41 @@ class BlunoBeetle(threading.Thread):
     # Store packets that are ready to be sent via ext comms
     packet_queue = deque()
 
-    # Variables used to maintain gamestate
-    players = [GameState()]
+    # laptop node ID
+    node_id = 0
 
     #################### Init function ####################
 
     def __init__(self, params):
         super().__init__()
 
+        # for beetle identification
+        #self.player_no = params[0]
         self.beetle_id = params[0]
-        self.node_id = 0
+        
+        # bluepy variables
         self.mac_addr = params[1]
         self.write_service_id = 3
         self.write_service = None
         self.delegate = ReadDelegate()
         self.peripheral = Peripheral()
+        
+        # helper class variables
         self.crc = CRC()
         self.ble_packet = BLEPacket()
-        self.default_packets = []
+        
+        # state variables
         self.is_connected = False
+        self.shutdown = threading.Event()
+        
+        # statistics variables
         self.fragmented_packet_count = 0
         self.processed_bit_count = 0
-        self.shutdown = threading.Event()
+        
+        # helper functions
+        self.default_packets = []
         self.generate_default_packets()
-
+        
         #self.counter = 0
     
     #################### Getter functions ####################
@@ -84,11 +95,12 @@ class BlunoBeetle(threading.Thread):
 
     def generate_default_packets(self):
         for i in range(3):
+            data = [0] * PACKET_FIELDS
             node_id = self.node_id
             packet_type = i
             header = (node_id << 4) | packet_type
-            data = [header, 0, 0, 0, 0, 0, 0, 0]
-            data[7] = self.crc.calc(self.ble_packet.pack(data))
+            data[0] = header
+            data[-1] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
      
     #################### Packet sending ####################
