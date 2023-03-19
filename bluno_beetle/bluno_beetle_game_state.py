@@ -15,11 +15,10 @@ class BlunoBeetleGameState(BlunoBeetle):
 
     def generate_game_state_packet(self, packet_type):
         data = [0] * PACKET_FIELDS
-        node_id = self.node_id
-        header = (node_id << 4) | (packet_type << 2) | self.seq_no
+        header = (BlunoBeetle.node_id << 4) | (packet_type << 2) | self.seq_no
         data[0] = header
-        data[1] = BlunoBeetle.players[0].bullets
-        data[2] = BlunoBeetle.players[0].health
+        #data[1] = Player.players_game_state[self.player_id].bullets
+        #data[2] = Player.players_game_state[self.player_id].health
         data[-1] = self.crc.calc(self.ble_packet.pack(data))
         return self.ble_packet.pack(data)
 
@@ -35,9 +34,9 @@ class BlunoBeetleGameState(BlunoBeetle):
 
     def process_data(self):
         self.ble_packet.unpack(self.delegate.extract_buffer())
-        self.print_test_data()
-        print("Processing data")
-        print(self.seq_no_check())
+        #self.print_test_data()
+        #print("Processing data")
+        #print(self.seq_no_check())
         if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
              # increment seq no
             self.seq_no += 1

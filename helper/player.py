@@ -13,15 +13,19 @@ class Player(threading.Thread):
 
     def __init__(self, params):
         self.player_id = params[0]
-        self.beetles = [    BlunoBeetleGameState(params[1]),    # gun (IR transmitter)
-                            BlunoBeetleGameState(params[2]),    # vest (IR receiver)
-                            BlunoBeetleUDP(params[3])]          # glove (imu_sensor)
+        self.beetles = [    BlunoBeetleGameState(params[0] + params[1]),    # gun (IR transmitter)
+                            BlunoBeetleGameState(params[0] + params[2]),    # vest (IR receiver)
+                            BlunoBeetleUDP(params[0] + params[3])]          # glove (imu_sensor)
+        
+    def set_game_state(self, new_bullets, new_health):
+        players_game_state[self.player_id].bullets(new_bullets)
+        players_game_state[self.player_id].health(new_health)
 
     def print_player_stats(self):
         print("Player {} - Bullets = {}, Health = {}".format(
             self.player_id,
-            Player.players_game_state[self.player_id].get_bullets,
-            Player.players_game_state[self.player_id].get_health,
+            Player.players_game_state[self.player_id].bullets,
+            Player.players_game_state[self.player_id].health,
         ))
 
     def print_player_beetle_info(self):

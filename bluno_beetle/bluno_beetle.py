@@ -27,11 +27,11 @@ class BlunoBeetle(threading.Thread):
         super().__init__()
 
         # for beetle identification
-        #self.player_no = params[0]
-        self.beetle_id = params[0]
+        self.player_no = params[0]
+        self.beetle_id = params[1]
+        self.mac_addr = params[2]
         
         # bluepy variables
-        self.mac_addr = params[1]
         self.write_service_id = 3
         self.write_service = None
         self.delegate = ReadDelegate()
@@ -96,9 +96,7 @@ class BlunoBeetle(threading.Thread):
     def generate_default_packets(self):
         for i in range(3):
             data = [0] * PACKET_FIELDS
-            node_id = self.node_id
-            packet_type = i
-            header = (node_id << 4) | packet_type
+            header = (BlunoBeetle.node_id << 4) | i
             data[0] = header
             data[-1] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
