@@ -52,7 +52,7 @@ class BlunoBeetle(threading.Thread):
         # helper functions
         self.default_packets = []
         self.generate_default_packets()
-        
+       
         #self.counter = 0
     
     #################### Getter functions ####################
@@ -96,8 +96,7 @@ class BlunoBeetle(threading.Thread):
     def generate_default_packets(self):
         for i in range(3):
             data = [0] * PACKET_FIELDS
-            header = (BlunoBeetle.node_id << 4) | i
-            data[0] = header
+            data[0] = (BlunoBeetle.node_id << 4) | (i << 2)
             data[-1] = self.crc.calc(self.ble_packet.pack(data))
             self.default_packets.append(self.ble_packet.pack(data))
      
@@ -142,9 +141,10 @@ class BlunoBeetle(threading.Thread):
     
     # for testing
     def print_test_data(self):
-        print("Bluno ID: {}, Packet type: {}".format(
+        print("Bluno ID: {}, Packet type: {}, Seq No: {}".format(
             self.ble_packet.get_beetle_id(), 
-            self.ble_packet.get_packet_type()
+            self.ble_packet.get_packet_type(),
+            self.ble_packet.get_seq_no()
         ))
         print("Euler data: {}, Acceleration data: {}".format(
             self.ble_packet.get_euler_data(),
@@ -164,8 +164,9 @@ class BlunoBeetle(threading.Thread):
             # busy wait for response from beetle
             while self.delegate.buffer_len < PACKET_SIZE:
                 if self.peripheral.waitForNotifications(0.0005):
-                    pass
-                elif time.perf_counter() - start_time >= 1.0:
+                    continue
+
+                if time.perf_counter() - start_time >= 1.0:
                     tle = True
                     break
                 
@@ -186,15 +187,16 @@ class BlunoBeetle(threading.Thread):
             self.is_connected = True
 
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
-                                  
-    def add_packet_to_queue(self):
-        BlunoBeetle.packet_queue.append(self.ble_packet.pack())
+
+    def queue_packet(self, packet):
+        BlunoBeetle.packet_queue.append(packet)
 
     def process_data(self):
-        self.ble_packet.unpack(self.delegate.extract_buffer())
+        packet = self.delegate.extract_buffer()
+        self.ble_packet.unpack(packet)
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.send_default_packet(PacketType.ACK)
-            self.add_packet_to_queue()
+            self.queue_packet(packet)
 
             # for testing
             #self.print_test_data()
@@ -204,21 +206,19 @@ class BlunoBeetle(threading.Thread):
     def wait_for_data(self):
         try:
             self.three_way_handshake()
-            start_time = time.perf_counter()
+            #start_time = time.perf_counter()
             while not self.shutdown.is_set():
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
-                    start_time = time.perf_counter()
+                    # start_time = time.perf_counter()
 
                     # fragmented packet received in buffer
                     if self.delegate.buffer_len < PACKET_SIZE:
                         self.fragmented_packet_count += 1 
-                        continue
-                    
-                    # full packet in buffer
-                    self.process_data()
-                    self.processed_bit_count += PACKET_SIZE * 8
-                    continue
+                    else:
+                        # full packet in buffer
+                        self.process_data()
+                        self.processed_bit_count += PACKET_SIZE * 8
 
                 # no packet received, check for timeout
                 #if time.perf_counter() - start_time >= 2.5:

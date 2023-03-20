@@ -30,6 +30,7 @@ class BLEPacket:
 
     @dispatch(list)
     def pack(self, params):
+        """
         self.update_attributes(params)
         return struct.pack(PACKET_FORMAT_STRING,
                 self.header,
@@ -40,6 +41,16 @@ class BLEPacket:
                 self.acc_y,
                 self.acc_z,
                 self.crc)
+        """
+        return struct.pack(PACKET_FORMAT_STRING,
+                params[0],
+                params[1],
+                params[2],
+                params[3],
+                params[4],
+                params[5],
+                params[6],
+                params[7])
 
     # unpacks byte array and sets the attributes based on the packet data
     def unpack(self, packet):
@@ -57,8 +68,7 @@ class BLEPacket:
         return (self.header & 0xf0) >> 4
     
     def get_packet_type(self):
-        return self.header & 0xf
-        #return (self.header & 0b1100) >> 2
+        return (self.header & 0b1100) >> 2
 
     # Used for new format
     def get_seq_no(self):

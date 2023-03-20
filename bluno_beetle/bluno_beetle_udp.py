@@ -6,9 +6,10 @@ class BlunoBeetleUDP(BlunoBeetle):
         super().__init__(params)
        
     def process_data(self):
-        self.ble_packet.unpack(self.delegate.extract_buffer())
+        packet = self.delegate.extract_buffer()
+        self.ble_packet.unpack(packet)
         if self.crc_check() and self.packet_check(PacketType.DATA):
-            self.add_packet_to_queue()
+            BlunoBeetle.packet_queue.append(packet)
 
             # for testing
             #self.print_test_data()

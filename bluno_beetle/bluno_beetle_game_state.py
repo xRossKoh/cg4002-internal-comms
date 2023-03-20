@@ -15,8 +15,7 @@ class BlunoBeetleGameState(BlunoBeetle):
 
     def generate_game_state_packet(self, packet_type):
         data = [0] * PACKET_FIELDS
-        header = (BlunoBeetle.node_id << 4) | (packet_type << 2) | self.seq_no
-        data[0] = header
+        data[0] = (BlunoBeetle.node_id << 4) | (packet_type << 2) | self.seq_no
         #data[1] = Player.players_game_state[self.player_id].bullets
         #data[2] = Player.players_game_state[self.player_id].health
         data[-1] = self.crc.calc(self.ble_packet.pack(data))
@@ -31,26 +30,7 @@ class BlunoBeetleGameState(BlunoBeetle):
 
     def seq_no_check(self):
         return self.ble_packet.get_seq_no() == self.seq_no
-
-    def process_data(self):
-        self.ble_packet.unpack(self.delegate.extract_buffer())
-        #self.print_test_data()
-        #print("Processing data")
-        #print(self.seq_no_check())
-        if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
-             # increment seq no
-            self.seq_no += 1
-            self.seq_no %= 2
-
-            # for testing
-            #self.print_test_data()
-
-            self.add_packet_to_queue()
-        
-        # incorrect packet will send with old seq no
-        # correct packet will send with new seq no
-        #self.send_game_state_packet(PacketType.ACK)
-    
+ 
     def three_way_handshake(self):
         while not self.is_connected:
             self.send_game_state_packet(PacketType.HELLO)
@@ -62,8 +42,9 @@ class BlunoBeetleGameState(BlunoBeetle):
             # busy wait for response from beetle
             while self.delegate.buffer_len < PACKET_SIZE:
                 if self.peripheral.waitForNotifications(0.0005):
-                    pass
-                elif time.perf_counter() - start_time >= 0.1:
+                    continue
+                
+                if time.perf_counter() - start_time >= 1.0:
                     tle = True
                     break
                 
@@ -71,7 +52,7 @@ class BlunoBeetleGameState(BlunoBeetle):
                 continue
 
             self.ble_packet.unpack(self.delegate.extract_buffer())
-
+            
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
                 #print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
@@ -88,17 +69,35 @@ class BlunoBeetleGameState(BlunoBeetle):
 
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
 
+    def process_data(self):
+        packet = self.delegate.extract_buffer()
+        self.ble_packet.unpack(packet)
+        #print(self.seq_no_check())
+        #self.print_test_data()
+        if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
+             # increment seq no
+            self.seq_no += 1
+            self.seq_no %= 2
+
+            # for testing
+            #self.print_test_data()
+
+            self.queue_packet(packet)
+        
+        # incorrect packet will send with old seq no
+        # correct packet will send with new seq no
+        #self.send_game_state_packet(PacketType.ACK)
 
     def wait_for_data(self):
         try:
             self.three_way_handshake()
-            start_time = time.perf_counter()
+            # start_time = time.perf_counter()
             ack_time = time.perf_counter()
             while not self.shutdown.is_set():
                 # check for bluetooth communication
                 if self.peripheral.waitForNotifications(0.0005):
                     # reset start time if packet is received
-                    start_time = time.perf_counter()
+                    # start_time = time.perf_counter()
 
                     # check if a full packet is in buffer
                     if self.delegate.buffer_len < PACKET_SIZE:
