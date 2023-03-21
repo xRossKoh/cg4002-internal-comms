@@ -181,9 +181,7 @@ unsigned int count = 0;
 
 void loop() {
   delay(100);
-  count++;
-  count %= 10;
-  if (count == 0) numShots++;
+  numShots++;
   if (numShots > 0)
   {
     // increment sequence number for next packet

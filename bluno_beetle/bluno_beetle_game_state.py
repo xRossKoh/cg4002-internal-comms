@@ -1,7 +1,7 @@
 from bluno_beetle import BlunoBeetle
 from packet_type import PacketType
-from constant import PACKET_SIZE, PACKET_FIELDS
 
+import constant
 import time
 
 class BlunoBeetleGameState(BlunoBeetle):
@@ -14,8 +14,8 @@ class BlunoBeetleGameState(BlunoBeetle):
     #################### Packet generation ####################
 
     def generate_game_state_packet(self, packet_type):
-        data = [0] * PACKET_FIELDS
-        data[0] = (BlunoBeetle.node_id << 4) | (packet_type << 2) | self.seq_no
+        data = [0] * constant.PACKET_FIELDS
+        data[0] = (BlunoBeetle.node_id << constant.NODE_ID_POS) | (packet_type << constant.PACKET_TYPE__POS) | self.seq_no
         #data[1] = Player.players_game_state[self.player_id].bullets
         #data[2] = Player.players_game_state[self.player_id].health
         data[-1] = self.crc.calc(self.ble_packet.pack(data))
@@ -24,7 +24,8 @@ class BlunoBeetleGameState(BlunoBeetle):
     #################### Packet sending ####################
 
     def send_game_state_packet(self, packet_type):
-        self.send_packet(self.generate_game_state_packet(packet_type))
+        packet = self.generate_game_state_packet(packet_type)
+        self.send_packet(packet)
 
     #################### Checks ####################
 
@@ -40,11 +41,11 @@ class BlunoBeetleGameState(BlunoBeetle):
             tle = False
 
             # busy wait for response from beetle
-            while self.delegate.buffer_len < PACKET_SIZE:
-                if self.peripheral.waitForNotifications(0.0005):
+            while self.delegate.buffer_len < constant.PACKET_SIZE:
+                if self.peripheral.waitForNotifications(constant.POLL_PERIOD):
                     continue
                 
-                if time.perf_counter() - start_time >= 1.0:
+                if time.perf_counter() - start_time >= constant.TIMEOUT:
                     tle = True
                     break
                 
@@ -72,6 +73,7 @@ class BlunoBeetleGameState(BlunoBeetle):
     def process_data(self):
         packet = self.delegate.extract_buffer()
         self.ble_packet.unpack(packet)
+        #print(packet)
         #print(self.seq_no_check())
         #self.print_test_data()
         if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
@@ -84,41 +86,26 @@ class BlunoBeetleGameState(BlunoBeetle):
 
             self.queue_packet(packet)
         
-        # incorrect packet will send with old seq no
-        # correct packet will send with new seq no
-        #self.send_game_state_packet(PacketType.ACK)
-
     def wait_for_data(self):
         try:
             self.three_way_handshake()
-            # start_time = time.perf_counter()
             ack_time = time.perf_counter()
             while not self.shutdown.is_set():
                 # check for bluetooth communication
-                if self.peripheral.waitForNotifications(0.0005):
-                    # reset start time if packet is received
-                    # start_time = time.perf_counter()
-
+                if self.peripheral.waitForNotifications(constant.POLL_PERIOD):
                     # check if a full packet is in buffer
-                    if self.delegate.buffer_len < PACKET_SIZE:
+                    if self.delegate.buffer_len < constant.PACKET_SIZE:
                         self.fragmented_packet_count += 1 
                     else:
                         # full packet in buffer
                         self.process_data()
-                        self.processed_bit_count += PACKET_SIZE * 8
+                        self.processed_bit_count += constant.PACKET_SIZE * 8
                 
                 # send game state update every 0.1s if no packet received
                 if time.perf_counter() - ack_time >= 0.1:
                     #print("Game state update")
                     self.send_game_state_packet(PacketType.ACK)
                     ack_time = time.perf_counter()
-
-                # no packet received, check for timeout
-                #if time.perf_counter() - start_time >= 2.5:
-                #    print("Timeout")
-                #    self.reconnect()
-                #    start_time = time.perf_counter()
-                #    ack_time = time.perf_counter()
 
             # shutdown connection and terminate thread
             self.disconnect()
@@ -131,4 +118,3 @@ class BlunoBeetleGameState(BlunoBeetle):
     def run(self):
         self.connect()
         self.wait_for_data()
-

@@ -10,6 +10,16 @@ PACKET_FORMAT_STRING = "Bx6hH"
 # Escape character to return cursor to previous line
 LINE_UP = '\033[F'
 
+# Disconnect timeout
+TIMEOUT = 1.0
+
+# Poll period
+POLL_PERIOD = 0.0005
+
+# Packet header offsets
+NODE_ID_POS = 4
+PACKET_TYPE_POS = 2
+
 # MAC addresses of Bluno Beetles
 # Player 1
 P1_IR_TRANSMITTER = "b0:b1:13:2d:cb:8c"
