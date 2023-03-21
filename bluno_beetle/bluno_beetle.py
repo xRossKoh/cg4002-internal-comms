@@ -223,13 +223,14 @@ class BlunoBeetle(threading.Thread):
                 # no packet received, check for timeout
                 if time.perf_counter() - start_time >= constant.TIMEOUT:
                     self.reconnect()
+                    self.three_way_handshake()
                     start_time = time.perf_counter()
 
             # shutdown connection and terminate thread
             self.disconnect()
             print("Beetle ID {} terminated".format(self.beetle_id))
         except Exception as e:
-            print(e)
+            #print(e)
             self.reconnect()
             self.wait_for_data()
 

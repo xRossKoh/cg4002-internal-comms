@@ -57,7 +57,6 @@ const int default_data[] = {0, 0, 0, 0, 0, 0};
 const int shot_data[] = {1, 0, 0, 0, 0, 0};
 
 static unsigned int health = 100;
-static unsigned int shotCount = 0;
 static unsigned int seqNo = 1;
 static unsigned int counter = 0;
 
@@ -182,8 +181,6 @@ void threeWayHandshake()
 
     // reset seq no
     seqNo = 1;
-
-    shotCount = 0;
     
     // wait for ack from laptop
     waitForData();
@@ -215,18 +212,18 @@ void setup() {
   threeWayHandshake();
 }
 
-
-// ================================================================
-// ===               INTERRUPT FUNCTIONS            ===
-// ================================================================
-volatile int num_Shots_Detected = 0;
-void handleReceivedTinyIRData(uint8_t aAddress, uint8_t aCommand, uint8_t aFlags) {
-  //command received for player 2 is '2':
-  if (255-aCommand == 2){
-   num_Shots_Detected++;
-   shotCount++;
-  }
-}
+//
+//// ================================================================
+//// ===               INTERRUPT FUNCTIONS            ===
+//// ================================================================
+//volatile int num_Shots_Detected = 0;
+//void handleReceivedTinyIRData(uint8_t aAddress, uint8_t aCommand, uint8_t aFlags) {
+//  //command received for player 2 is '2':
+//  if (255-aCommand == 2){
+//   num_Shots_Detected++;
+//   shotCount++;
+//  }
+//}
 // ================================================================
 // ===               FUNCTIONS            ===
 // ================================================================
@@ -273,7 +270,6 @@ void send_Shot_Packet() {
       if (!crcCheck()) continue;
       if (packetCheck(0, ACK) && seqNoCheck())
       {
-        shotCount--; // becomes 0 once ACK-ed
         counter++;
         updateGameState();
         changeDisplayPoints(health);
@@ -285,8 +281,6 @@ void send_Shot_Packet() {
 
         // reset seq no
         seqNo = 1;
-
-        shotCount = 0;
         
         // wait for ack from laptop
         waitForData();
@@ -310,8 +304,6 @@ void wait_Relay_Node(){
 
       // reset seq no
       seqNo = 1;
-
-      shotCount = 0;
       
       // wait for ack from laptop
       waitForData();

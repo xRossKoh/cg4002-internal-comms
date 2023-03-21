@@ -8,6 +8,6 @@ from bluno_beetle_game_state import BlunoBeetleGameState
 
 import constant
 
-ir_receiver = BlunoBeetleGameState((2, constant.P2_IR_RECEIVER))
+ir_receiver = BlunoBeetleGameState([0, 2, constant.P1_IR_RECEIVER])
 #ir_receiver = BlunoBeetle((5, constant.P2_IR_RECEIVER))
 ir_receiver.start()
