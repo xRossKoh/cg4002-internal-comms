@@ -27,7 +27,7 @@ class BlunoBeetle(threading.Thread):
         super().__init__()
 
         # for beetle identification
-        self.player_no = params[0]
+        self.player_id = params[0]
         self.beetle_id = params[1]
         self.mac_addr = params[2]
         

@@ -1,4 +1,3 @@
-from bluno_beetle import BlunoBeetle
 from bluno_beetle_udp import BlunoBeetleUDP
 from bluno_beetle_game_state import BlunoBeetleGameState
 from game_state import GameState
@@ -15,7 +14,7 @@ class Player(threading.Thread):
 
     def __init__(self, params):
         super().__init__()
-
+        
         self.player_id = params[0]
         self.beetles = [    BlunoBeetleGameState([params[0]] + params[1]),    # gun (IR transmitter)
                             BlunoBeetleGameState([params[0]] + params[2]),    # vest (IR receiver)
@@ -27,10 +26,12 @@ class Player(threading.Thread):
         self.prev_processed_bit_count = 0
         self.current_data_rate = 0
     
-    def update_game_state(self, packet):
+    @classmethod
+    def update_game_state(cls, packet):
         unpacker = BLEPacket()
         unpacker.unpack(packet)
-        players_game_state[0].update_game_state(unpacker.get_euler_data()[:2])
+        p1_game_state = unpacker.get_euler_data()
+        cls.players_game_state[0].update_game_state(p1_game_state)
         #players_game_state[1].update_game_state(unpacket.get_acc_data()[:2])
  
     # prints beetle data and statistics to std output
@@ -41,7 +42,7 @@ class Player(threading.Thread):
 
             print("***********************************************************************************************************")
             print("Player {} - Bullets = {}, Health = {}".ljust(constant.STD_OP_LENGTH).format(
-                self.player_id,
+                self.player_id + 1,
                 Player.players_game_state[self.player_id].bullets,
                 Player.players_game_state[self.player_id].health,
             ))

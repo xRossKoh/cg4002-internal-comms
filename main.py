@@ -38,32 +38,7 @@ class Controller(threading.Thread):
             self.players.append(Player(param))
             Player.players_game_state.append(GameState())
 
-        """
-        self.beetles = [
-                BlunoBeetleGameState(params[0]), 
-                BlunoBeetleGameState(params[1]), 
-                BlunoBeetleUDP(params[2])
-            ]
-        
-        # For statistics calculation
-        self.start_time = 0
-        self.prev_time = 0
-        self.prev_processed_bit_count = 0
-        self.current_data_rate = 0
-
-        #self.data = b''
-
-        #self.client = Client()
-        """
-
-    def setup(self):
-        print('Setting up Secret Key')
-        print('Default Secret Key: chrisisdabest123')
-
-        secret_key = 'chrisisdabest123'
-
-        self.secret_key = secret_key
-        self.secret_key_bytes = bytes(str(secret_key), encoding='utf-8')
+        self.data = b''
 
     def close_connection(self):
         self.connection.shutdown(SHUT_RDWR)
@@ -76,75 +51,41 @@ class Controller(threading.Thread):
     def receive_game_state(self):
         while not self.shutdown.is_set():
             message = self.client_socket.recv(128)
-            if len(message) > 0:
-                print(message)
+            
+            self.data = self.data + message
+
+            if len(self.data) < constant.PACKET_SIZE:
+                continue
+
+            packet = self.data[:constant.PACKET_SIZE]
+            self.data = self.data[constant.PACKET_SIZE:]
+
+            Player.update_game_state(packet)
 
     def run_threads(self):
         # create thread for printing statistics
-        print_thread = threading.Thread(target=self.print_statistics, args=())
         receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
-        for i in range(constant.STD_OP_LINES):
-            print()
-
-        self.start_time = time.perf_counter()
-
-        #self.client.start()
-
-        for beetle in self.beetles:
-            beetle.start()
-
-        print_thread.start()
-        #receive_thread.start()
+        
+        for player in self.players:
+            player.start()
+        
+        receive_thread.start()
     
     # run() function invoked by thread.start()
     def run(self):
-        #self.setup()
-        #self.run_threads()
-        for player in self.players:
-            player.start()
+        self.run_threads()
 
         while not self.shutdown.is_set():
             try:
-                #data = input("Enter char: ")
-
                 if not BlunoBeetle.packet_queue:
                     continue
                 
                 data = BlunoBeetle.packet_queue.popleft()
-                #print(data)
                 self.client_socket.send(data)
             except Exception as _:
                 # traceback.print_exc()
                 #self.close_connection()
                 continue
-    """    
-    # prints beetle data and statistics to std output
-    def print_statistics(self):
-        while True:
-            for i in range(constant.STD_OP_LINES):
-                print(constant.LINE_UP, end="")
-
-            print("***********************************************************************************************************")
-            processed_bit_count = 0
-            fragmented_packet_count = 0
-            for beetle in self.beetles:
-                processed_bit_count += beetle.get_processed_bit_count()
-                fragmented_packet_count += beetle.get_fragmented_packet_count()
-                beetle.print_beetle_info()
-
-            print("Statistics".ljust(constant.STD_OP_LENGTH))
-            current_time = time.perf_counter()
-            if current_time - self.prev_time >= 1:
-                self.current_data_rate = ((processed_bit_count - self.prev_processed_bit_count) / 1000) / (current_time - self.prev_time)
-                self.prev_time = current_time
-                self.prev_processed_bit_count = processed_bit_count
-            print("Current data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(self.current_data_rate))
-            print("Average Data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(
-                (processed_bit_count / 1000) / (current_time - self.start_time)
-            ))
-            print("No. of fragmented packets: {}".ljust(constant.STD_OP_LENGTH).format(fragmented_packet_count))
-            print("************************************************************************************************************")
-        """
 
 if __name__ == '__main__':
     controller = Controller((
