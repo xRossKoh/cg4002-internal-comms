@@ -7,114 +7,21 @@ sys.path.append('/home/kenneth/Desktop/CG4002/scripts/helper')
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_game_state import BlunoBeetleGameState
 from bluno_beetle_udp import BlunoBeetleUDP
+from player import Player
+from game_state import GameState
 from _socket import SHUT_RDWR
 from collections import deque
 
-#import asyncio
 import constant
 import socket
 import threading
 import traceback
 import time
 
-"""
-import asyncio
-import websockets
-import time
-
-SERVER_ADDRESS = "ws://localhost:8080"
-BUFFER_SIZE = 1024
-DATA_TO_SEND = b'x' * 20 * 16 # 1 MB of data
-
-class WebSocketClient:
-     async def send_message(self, message):
-         async with websockets.connect(SERVER_ADDRESS) as websocket:
-             print(f'Sending message: {message}'.ljust(40))
-             await websocket.send(message)
-             response = await websocket.recv()
-             print(f'Response received: {response}'.ljust(40))
-
- async def main():
-     client = WebSocketClient()
-     while True:
-         data = input("Message: ")
-         await client.send_message(data)
-
- if __name__ == '__main__':
-     asyncio.run(main())
-
-async def start_client():
-    async with websockets.connect(SERVER_ADDRESS) as websocket:
-        res = []
-        print('Client connected. Sending data...')
-
-        for i in range(21):
-            start_time = time.time()
-
-            # Send the data to the server in chunks
-            total_sent = 0
-            while total_sent < len(DATA_TO_SEND):
-                try:
-                    # data = DATA_TO_SEND[total_sent:]
-                    data = input("Input: ")
-                    sent = await websocket.send(data)
-                except websockets.exceptions.ConnectionClosedError:
-                    print('Server closed the connection prematurely.')
-                    return
-
-                if not sent:
-                    break
-                total_sent += sent
-
-            # Wait for the server to send the data back
-            received_data = b''
-            while len(received_data) < len(DATA_TO_SEND):
-                data = await websocket.recv()
-                if not data:
-                    break
-                received_data += data
-
-            end_time = time.time()
-
-            # Calculate the time taken to send and receive the data
-            time_taken = end_time - start_time
-            res.append(time_taken)
-
-        print('Average Data sent and received in {:.4f} seconds.'.format(sum(res) / len(res)))
-
-asyncio.run(start_client())
-
-class WebSocketClient:
-    def __init__(self, host_name, port_num):
-        self.server_address = f"ws://{host_name}:{port_num}"
-
-        # self.lock = asyncio.Lock()
-
-        self.ble_packet = BLEPacket()
-
-    async def send(self):
-        async with websockets.connect(self.server_address) as websocket:
-            print('Connected to Ultra96')
-            while True:
-                try:
-                    sent = await websocket.send("Hello".encode())
-                except websockets.exceptions.ConnectionClosedError:
-                    print('Server closed the connection prematurely.')
-                    return
-
-    async def receive_packet(self):
-        message = await self.websocket.recv()
-        self.ble_packet.unpack(message)
-        print("CRC: ", self.packer.get_crc())
-
-    async def run(self):
-        await self.send()
-"""
-
 class Controller(threading.Thread):
     def __init__(self, params):
         super().__init__()
-        """
+        
         # Create a TCP/IP socket
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -122,10 +29,16 @@ class Controller(threading.Thread):
         self.connection = client_socket.connect(("localhost" , 8080))
         self.secret_key = None
         self.secret_key_bytes = None
-        """
+
         # Flags
         self.shutdown = threading.Event()
         
+        self.players = []
+        for param in params:
+            self.players.append(Player(param))
+            Player.players_game_state.append(GameState())
+
+        """
         self.beetles = [
                 BlunoBeetleGameState(params[0]), 
                 BlunoBeetleGameState(params[1]), 
@@ -141,6 +54,7 @@ class Controller(threading.Thread):
         #self.data = b''
 
         #self.client = Client()
+        """
 
     def setup(self):
         print('Setting up Secret Key')
@@ -168,8 +82,8 @@ class Controller(threading.Thread):
     def run_threads(self):
         # create thread for printing statistics
         print_thread = threading.Thread(target=self.print_statistics, args=())
-        #receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
-        for i in range(18):
+        receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
+        for i in range(constant.STD_OP_LINES):
             print()
 
         self.start_time = time.perf_counter()
@@ -185,8 +99,10 @@ class Controller(threading.Thread):
     # run() function invoked by thread.start()
     def run(self):
         #self.setup()
-        self.run_threads()
-        """
+        #self.run_threads()
+        for player in self.players:
+            player.start()
+
         while not self.shutdown.is_set():
             try:
                 #data = input("Enter char: ")
@@ -201,11 +117,11 @@ class Controller(threading.Thread):
                 # traceback.print_exc()
                 #self.close_connection()
                 continue
-        """
+    """    
     # prints beetle data and statistics to std output
     def print_statistics(self):
         while True:
-            for i in range(18):
+            for i in range(constant.STD_OP_LINES):
                 print(constant.LINE_UP, end="")
 
             print("***********************************************************************************************************")
@@ -216,29 +132,30 @@ class Controller(threading.Thread):
                 fragmented_packet_count += beetle.get_fragmented_packet_count()
                 beetle.print_beetle_info()
 
-            print("Statistics".ljust(80))
+            print("Statistics".ljust(constant.STD_OP_LENGTH))
             current_time = time.perf_counter()
             if current_time - self.prev_time >= 1:
                 self.current_data_rate = ((processed_bit_count - self.prev_processed_bit_count) / 1000) / (current_time - self.prev_time)
                 self.prev_time = current_time
                 self.prev_processed_bit_count = processed_bit_count
-            print("Current data rate: {} kbps".ljust(80).format(self.current_data_rate))
-            print("Average Data rate: {} kbps".ljust(80).format(
+            print("Current data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(self.current_data_rate))
+            print("Average Data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(
                 (processed_bit_count / 1000) / (current_time - self.start_time)
             ))
-            print("No. of fragmented packets: {}".ljust(80).format(fragmented_packet_count))
+            print("No. of fragmented packets: {}".ljust(constant.STD_OP_LENGTH).format(fragmented_packet_count))
             print("************************************************************************************************************")
+        """
 
 if __name__ == '__main__':
-    #client = WebSocketClient("localhost", 8080)
-    #asyncio.run(client.run())
-    controller = Controller([
-        [0, 1, constant.P1_IR_TRANSMITTER],     # P1 gun (IR transmitter)
-        #[0, 2, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
-        [0, 2, constant.P1_IR_RECEIVER],        # P1 vest (IR receiver)
-        [0, 3, constant.P1_IMU_SENSOR],         # P1 glove (IMU and flex sensors)
-        #[1, 4, constant.P2_IR_TRANSMITTER],     # P2 gun (IR transmitter)
-        #[1, 5, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
-        #[1, 6, constant.P2_IMU_SENSOR]          # P2 glove (IMU and flex sensors)
-    ])
+    controller = Controller((
+            (0,
+            [1, constant.P1_IR_TRANSMITTER],     # P1 gun (IR transmitter)
+            #[0, 2, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
+            [2, constant.P1_IR_RECEIVER],        # P1 vest (IR receiver)
+            [3, constant.P1_IMU_SENSOR]),       # P1 glove (IMU and flex sensors)
+            #(1,
+            #[4, constant.P2_IR_TRANSMITTER],     # P2 gun (IR transmitter)
+            #[5, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
+            #[6, constant.P2_IMU_SENSOR])          # P2 glove (IMU and flex sensors)
+            ))
     controller.start()

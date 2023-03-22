@@ -341,7 +341,7 @@ if __name__ == '__main__':
     controller = Controller([
         #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
         #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
-        (3, constant.P1_IMU_SENSOR),        # P1 glove (IMU and flex sensors)
+        [0, 3, constant.P1_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
         #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)

@@ -18,3 +18,7 @@ class GameState:
     @health.setter
     def health(self, updated_health):
         self._health = updated_health
+
+    def update_game_state(self, new_game_state):
+        self.bullets(new_game_state[0])
+        self.health(new_game_state[1])
