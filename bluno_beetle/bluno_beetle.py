@@ -6,6 +6,7 @@ from struct import *
 from packet_type import PacketType
 from game_state import GameState
 from collections import deque
+from queue import Queue
 
 import constant
 import threading
@@ -16,7 +17,7 @@ class BlunoBeetle(threading.Thread):
     #################### Class variables ####################
 
     # Store packets that are ready to be sent via ext comms
-    packet_queue = deque()
+    packet_queue = Queue()
 
     # laptop node ID
     node_id = 0
@@ -189,7 +190,7 @@ class BlunoBeetle(threading.Thread):
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
 
     def queue_packet(self, packet):
-        BlunoBeetle.packet_queue.append(packet)
+        BlunoBeetle.packet_queue.put(packet)
 
     def process_data(self):
         packet = self.delegate.extract_buffer()

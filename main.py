@@ -79,9 +79,9 @@ class Controller(threading.Thread):
             try:
                 if not BlunoBeetle.packet_queue:
                     continue
-                
-                data = BlunoBeetle.packet_queue.popleft()
-                self.client_socket.send(data)
+                if BlunoBeetle.packet_queue:
+                    data = BlunoBeetle.packet_queue.get()
+                    self.client_socket.send(data)
             except Exception as _:
                 # traceback.print_exc()
                 #self.close_connection()
