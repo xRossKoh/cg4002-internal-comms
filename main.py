@@ -48,6 +48,16 @@ class Controller(threading.Thread):
 
         print("Shutting Down Connection")
     
+    def print_player_info(self):
+        while True:
+            for i in range(constant.STD_OP_LINES):
+                print(constant.LINE_UP, end="")
+            
+
+            print("***********************************************************************************************************")
+            for player in self.players:
+                player.print_statistics()
+
     def receive_game_state(self):
         while not self.shutdown.is_set():
             message = self.client_socket.recv(128)
@@ -63,16 +73,20 @@ class Controller(threading.Thread):
             Player.update_game_state(packet)
 
     def run_threads(self):
-        # create thread for printing statistics
+        print_thread = threading.Thread(target=self.print_player_info, args=())
         receive_thread = threading.Thread(target=self.receive_game_state, args=()) 
         
         for player in self.players:
             player.start()
         
+        print_thread.start()        
         receive_thread.start()
     
     # run() function invoked by thread.start()
     def run(self):
+        for i in range(constant.STD_OP_LINES):
+            print()
+
         self.run_threads()
 
         while not self.shutdown.is_set():
@@ -90,13 +104,12 @@ class Controller(threading.Thread):
 if __name__ == '__main__':
     controller = Controller((
             (0,
-            [1, constant.P1_IR_TRANSMITTER],     # P1 gun (IR transmitter)
-            #[0, 2, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
-            [2, constant.P1_IR_RECEIVER],        # P1 vest (IR receiver)
+            [1, constant.P1_IR_TRANSMITTER],    # P1 gun (IR transmitter)
+            [2, constant.P1_IR_RECEIVER],       # P1 vest (IR receiver)
             [3, constant.P1_IMU_SENSOR]),       # P1 glove (IMU and flex sensors)
-            #(1,
-            #[4, constant.P2_IR_TRANSMITTER],     # P2 gun (IR transmitter)
-            #[5, constant.P2_IR_RECEIVER],        # P2 vest (IR receiver)
-            #[6, constant.P2_IMU_SENSOR])          # P2 glove (IMU and flex sensors)
+            (1,
+            [4, constant.P2_IR_TRANSMITTER],    # P2 gun (IR transmitter)
+            [5, constant.P2_IR_RECEIVER],       # P2 vest (IR receiver)
+            [6, constant.P2_IMU_SENSOR])        # P2 glove (IMU and flex sensors)
             ))
     controller.start()

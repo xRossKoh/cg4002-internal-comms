@@ -36,47 +36,34 @@ class Player(threading.Thread):
  
     # prints beetle data and statistics to std output
     def print_statistics(self):
-        while True:
-            for i in range(constant.STD_OP_LINES):
-                print(constant.LINE_UP, end="")
+        print("Player {} - Bullets = {}, Health = {}".ljust(constant.STD_OP_LENGTH).format(
+            self.player_id + 1,
+            Player.players_game_state[self.player_id].bullets,
+            Player.players_game_state[self.player_id].health,
+        ))
+        print("***********************************************************************************************************")
+        #processed_bit_count = 0
+        #fragmented_packet_count = 0
+        for beetle in self.beetles:
+            #processed_bit_count += beetle.get_processed_bit_count()
+            #fragmented_packet_count += beetle.get_fragmented_packet_count()
+            beetle.print_beetle_info()
 
-            print("***********************************************************************************************************")
-            print("Player {} - Bullets = {}, Health = {}".ljust(constant.STD_OP_LENGTH).format(
-                self.player_id + 1,
-                Player.players_game_state[self.player_id].bullets,
-                Player.players_game_state[self.player_id].health,
-            ))
-            print("***********************************************************************************************************")
-            processed_bit_count = 0
-            fragmented_packet_count = 0
-            for beetle in self.beetles:
-                processed_bit_count += beetle.get_processed_bit_count()
-                fragmented_packet_count += beetle.get_fragmented_packet_count()
-                beetle.print_beetle_info()
+        #print("Statistics".ljust(constant.STD_OP_LENGTH))
+        #current_time = time.perf_counter()
+        #if current_time - self.prev_time >= 1:
+        #    self.current_data_rate = ((processed_bit_count - self.prev_processed_bit_count) / 1000) / (current_time - self.prev_time)
+        #    self.prev_time = current_time
+        #    self.prev_processed_bit_count = processed_bit_count
+        #print("Current data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(self.current_data_rate))
+        #print("Average Data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(
+        #    (processed_bit_count / 1000) / (current_time - self.start_time)
+        #))
+        #print("No. of fragmented packets: {}".ljust(constant.STD_OP_LENGTH).format(fragmented_packet_count))
+        #print("************************************************************************************************************")
 
-            print("Statistics".ljust(constant.STD_OP_LENGTH))
-            current_time = time.perf_counter()
-            if current_time - self.prev_time >= 1:
-                self.current_data_rate = ((processed_bit_count - self.prev_processed_bit_count) / 1000) / (current_time - self.prev_time)
-                self.prev_time = current_time
-                self.prev_processed_bit_count = processed_bit_count
-            print("Current data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(self.current_data_rate))
-            print("Average Data rate: {} kbps".ljust(constant.STD_OP_LENGTH).format(
-                (processed_bit_count / 1000) / (current_time - self.start_time)
-            ))
-            print("No. of fragmented packets: {}".ljust(constant.STD_OP_LENGTH).format(fragmented_packet_count))
-            print("************************************************************************************************************")
-
-    def run(self):
-        # create thread for printing statistics
-        print_thread = threading.Thread(target=self.print_statistics, args=())
-        
-        for i in range(constant.STD_OP_LINES):
-            print()
-
+    def run(self): 
         self.start_time = time.perf_counter()
 
         for beetle in self.beetles:
             beetle.start()
-
-        print_thread.start()

@@ -40,7 +40,7 @@ class Training(threading.Thread):
         self.headers.extend(['action', 'timestamp'])
 
         self.action_map = {0: 'GRENADE', 1: 'LOGOUT', 2: 'SHIELD', 3: 'RELOAD'}
-        self.filename = "/home/kenneth/Desktop/CG4002/scripts/training/raw_data.csv"
+        self.filename = "/home/kenneth/Desktop/CG4002/scripts/training/ken.csv"
         
         self.dataset_count = 0
     def sleep(self, seconds):
@@ -138,7 +138,7 @@ class Training(threading.Thread):
                 #         all_data.append([flex1, flex2, gx, gy, gz, accX / 100, accY / 100, accZ / 100])
                 start_time = time.time()
 
-                while time.time() - start_time <= 2:
+                while i < 40:
                     # getting data - simulation
                     # data = self.generate_simulated_data()
                     # print(f"data: {data} \n")
@@ -157,10 +157,10 @@ class Training(threading.Thread):
                         continue
                     if len(data) == 6:
                         gx, gy, gz, accX, accY, accZ = data
-                        all_data += [gx, gy, gz, accX / 100, accY / 100, accZ / 100]
+                        all_data += [gx, gy, gz, accX, accY, accZ]
 
-                    # self.sleep(0.05)
-                    # i += 1
+                    self.sleep(0.05)
+                    i += 1
                 #Training.collect_flag = False
                 #global_flag = False
                 size = len(all_data)
@@ -176,6 +176,7 @@ class Training(threading.Thread):
                     all_data = padding + all_data
 
                 print(len(all_data))
+                i = 0
                 #for i in all_data:
                 #    print(i)
                 # creating df for prneview
@@ -234,7 +235,7 @@ class Training(threading.Thread):
                     print("Data {} processed and saved to CSV file.".format(self.dataset_count))
                 else:
                     res_arr = []
-                    i = 0
+                    # i = 0
                     print("not proceed, restart")
             except Exception as _:
                 traceback.print_exc()
@@ -341,7 +342,7 @@ if __name__ == '__main__':
     controller = Controller([
         #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
         #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
-        [0, 3, constant.P1_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
+        [0, 3, constant.P2_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
         #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)

@@ -129,12 +129,12 @@ class BlunoBeetle(threading.Thread):
     ################ Print functions ####################
     
     def print_beetle_info(self):
-        print("Beetle {}, Packet type {}".ljust(constant.STD_OP_LENGTH).format(
+        print("Beetle {}: {}".ljust(constant.STD_OP_LENGTH).format(
             self.beetle_id,
-            self.ble_packet.get_packet_type()
+            "Connected" if self.is_connected else "Disconnected"
         ))
-        print(("Status: Connected" if self.is_connected else "Status: Disconnected").ljust(constant.STD_OP_LENGTH))
-        print("Eul data: {}, Acc data: {}".ljust(constant.STD_OP_LENGTH).format(
+        print("Packet data: {}, Eul data: {}, Acc data: {}".ljust(constant.STD_OP_LENGTH).format(
+            self.ble_packet.get_packet_type(),
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data()
         ))
