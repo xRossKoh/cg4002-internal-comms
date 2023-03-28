@@ -150,7 +150,23 @@ class BlunoBeetle(threading.Thread):
             self.ble_packet.get_euler_data(),
             self.ble_packet.get_acc_data(),
         ))
+    #################### Data processing ####################
 
+    def queue_packet(self, packet):
+        BlunoBeetle.packet_queue.put(packet)
+
+    def process_data(self):
+        packet = self.delegate.extract_buffer()
+        self.ble_packet.unpack(packet)
+        if self.crc_check() and self.packet_check(PacketType.DATA):
+            self.send_default_packet(PacketType.ACK)
+            self.queue_packet(packet)
+
+            # for testing
+            #self.print_test_data()
+        else:
+            self.send_default_packet(PacketType.NACK)
+    
     #################### Communication protocol ####################
 
     def three_way_handshake(self):
@@ -187,21 +203,6 @@ class BlunoBeetle(threading.Thread):
             self.is_connected = True
 
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
-
-    def queue_packet(self, packet):
-        BlunoBeetle.packet_queue.put(packet)
-
-    def process_data(self):
-        packet = self.delegate.extract_buffer()
-        self.ble_packet.unpack(packet)
-        if self.crc_check() and self.packet_check(PacketType.DATA):
-            self.send_default_packet(PacketType.ACK)
-            self.queue_packet(packet)
-
-            # for testing
-            #self.print_test_data()
-        else:
-            self.send_default_packet(PacketType.NACK)
 
     def wait_for_data(self):
         try:

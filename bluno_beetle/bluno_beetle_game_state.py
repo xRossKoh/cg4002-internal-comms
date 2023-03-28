@@ -32,7 +32,27 @@ class BlunoBeetleGameState(BlunoBeetle):
 
     def seq_no_check(self):
         return self.ble_packet.get_seq_no() == self.seq_no
- 
+
+    #################### Data processing ####################
+
+    def process_data(self):
+        packet = self.delegate.extract_buffer()
+        self.ble_packet.unpack(packet)
+        #print(packet)
+        #print(self.seq_no_check())
+        #self.print_test_data()
+        if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
+             # increment seq no
+            self.seq_no += 1
+            self.seq_no %= 2
+
+            # for testing
+            #self.print_test_data()
+
+            self.queue_packet(packet)
+    
+    #################### Communication protocol ####################
+    
     def three_way_handshake(self):
         while not self.is_connected:
             self.send_game_state_packet(PacketType.HELLO)
@@ -70,23 +90,7 @@ class BlunoBeetleGameState(BlunoBeetle):
             self.seq_no = 0
 
             #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
-
-    def process_data(self):
-        packet = self.delegate.extract_buffer()
-        self.ble_packet.unpack(packet)
-        #print(packet)
-        #print(self.seq_no_check())
-        #self.print_test_data()
-        if self.crc_check() and self.packet_check(PacketType.DATA) and self.seq_no_check():            
-             # increment seq no
-            self.seq_no += 1
-            self.seq_no %= 2
-
-            # for testing
-            #self.print_test_data()
-
-            self.queue_packet(packet)
-        
+     
     def wait_for_data(self):
         try:
             self.three_way_handshake()

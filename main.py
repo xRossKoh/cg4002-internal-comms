@@ -1,8 +1,11 @@
 import sys
 
+# File path of project directory
+FILEPATH = '/home/kenneth/Desktop/CG4002/cg4002-internal-comms/'
+
 # importing necessary module directories
-sys.path.append('/home/kenneth/Desktop/CG4002/scripts/bluno_beetle')
-sys.path.append('/home/kenneth/Desktop/CG4002/scripts/helper')
+sys.path.append(FILEPATH + 'bluno_beetle')
+sys.path.append(FILEPATH + 'helper')
 
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_game_state import BlunoBeetleGameState
