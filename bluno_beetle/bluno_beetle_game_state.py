@@ -17,8 +17,8 @@ class BlunoBeetleGameState(BlunoBeetle):
         data = [0] * constant.PACKET_FIELDS
         data[0] = (BlunoBeetle.node_id << constant.NODE_ID_POS) | (packet_type << constant.PACKET_TYPE_POS) | self.seq_no
         from player import Player
-        #data[1] = Player.players_game_state[self.player_id].bullets
-        #data[2] = Player.players_game_state[self.player_id].health
+        data[1] = Player.players_game_state[self.player_id].bullets
+        data[2] = Player.players_game_state[self.player_id].health
         data[-1] = self.crc.calc(self.ble_packet.pack(data))
         return self.ble_packet.pack(data)
 

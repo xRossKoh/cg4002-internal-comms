@@ -138,7 +138,6 @@ class BlunoBeetle(threading.Thread):
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data()
         ))
-        print("************************************************************************************************************")
     
     # for testing
     def print_test_data(self):

@@ -54,9 +54,10 @@ class Controller(threading.Thread):
                 print(constant.LINE_UP, end="")
             
 
-            print("***********************************************************************************************************")
+            print("#" * constant.STD_OP_LENGTH)
             for player in self.players:
                 player.print_statistics()
+                print("#" * constant.STD_OP_LENGTH)
 
     def receive_game_state(self):
         while not self.shutdown.is_set():
