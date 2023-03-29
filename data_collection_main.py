@@ -1,8 +1,12 @@
 import sys
 
+# File path of project directory
+# TODO change file path to ur current pwd
+FILEPATH = '/home/kenneth/Desktop/CG4002/cg4002-internal-comms/'
+
 # importing necessary module directories
-sys.path.append('/home/kenneth/Desktop/CG4002/scripts/bluno_beetle')
-sys.path.append('/home/kenneth/Desktop/CG4002/scripts/helper')
+sys.path.append(FILEPATH + 'bluno_beetle')
+sys.path.append(FILEPATH + 'helper')
 
 from bluno_beetle import BlunoBeetle
 from bluno_beetle_udp import BlunoBeetleUDP
@@ -40,7 +44,7 @@ class Training(threading.Thread):
         self.headers.extend(['action', 'timestamp'])
 
         self.action_map = {0: 'GRENADE', 1: 'LOGOUT', 2: 'SHIELD', 3: 'RELOAD'}
-        self.filename = "/home/kenneth/Desktop/CG4002/scripts/training/ken.csv"
+        self.filename = FILEPATH + "training/test_data.csv"
         
         self.dataset_count = 0
     def sleep(self, seconds):
@@ -342,7 +346,7 @@ if __name__ == '__main__':
     controller = Controller([
         #(1, constant.P1_IR_TRANSMITTER),    # P1 gun (IR transmitter)
         #(2, constant.P1_IR_RECEIVER),       # P1 vest (IR receiver)
-        [0, 3, constant.P2_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
+        [0, 3, constant.P1_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
         #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
         #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)

@@ -35,4 +35,4 @@ P2_IMU_SENSOR = "c4:be:84:20:19:4c"
 STD_OP_LENGTH = 80
 
 # Number of lines printed to std O/P
-STD_OP_LINES = 31
+STD_OP_LINES = 23
