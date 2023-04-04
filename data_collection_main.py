@@ -44,7 +44,7 @@ class Training(threading.Thread):
         self.headers.extend(['action', 'timestamp'])
 
         self.action_map = {0: 'GRENADE', 1: 'LOGOUT', 2: 'SHIELD', 3: 'RELOAD'}
-        self.filename = FILEPATH + "training/test_data.csv"
+        self.filename = FILEPATH + "training/new_logout.csv"
         
         self.dataset_count = 0
     def sleep(self, seconds):
@@ -349,7 +349,7 @@ if __name__ == '__main__':
         [0, 3, constant.P1_IMU_SENSOR],        # P1 glove (IMU and flex sensors)
         #(1, constant.P2_IR_TRANSMITTER),    # P2 gun (IR transmitter)
         #(2, constant.P2_IR_RECEIVER),       # P2 vest (IR receiver)
-        #(3, constant.P2_IMU_SENSOR)         # P2 glove (IMU and flex sensors)
+        #[1, 6, constant.P2_IMU_SENSOR]         # P2 glove (IMU and flex sensors)
     ])
     controller.start()
 

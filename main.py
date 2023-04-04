@@ -64,15 +64,15 @@ class Controller(threading.Thread):
 
     def receive_game_state(self):
         while not self.shutdown.is_set():
-            message = self.client_socket.recv(128)
+            packet = self.client_socket.recv(16)
             
-            self.data = self.data + message
+            #self.data = self.data + message
 
-            if len(self.data) < constant.PACKET_SIZE:
-                continue
+            #if len(self.data) < constant.PACKET_SIZE:
+            #    continue
 
-            packet = self.data[:constant.PACKET_SIZE]
-            self.data = self.data[constant.PACKET_SIZE:]
+            #packet = self.data[:constant.PACKET_SIZE]
+            #self.data = self.data[constant.PACKET_SIZE:]
 
             Player.update_game_state(packet)
 

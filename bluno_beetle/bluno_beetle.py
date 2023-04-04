@@ -54,7 +54,7 @@ class BlunoBeetle(threading.Thread):
         self.default_packets = []
         self.generate_default_packets()
        
-        #self.counter = 0
+        # self.counter = 0
     
     #################### Getter functions ####################
 
@@ -133,7 +133,7 @@ class BlunoBeetle(threading.Thread):
             self.beetle_id,
             "Connected" if self.is_connected else "Disconnected"
         ))
-        print("Packet data: {}, Eul data: {}, Acc data: {}".ljust(constant.STD_OP_LENGTH).format(
+        print("Packet type: {}, Eul data: {}, Acc data: {}".ljust(constant.STD_OP_LENGTH).format(
             self.ble_packet.get_packet_type(),
             self.ble_packet.get_euler_data(), 
             self.ble_packet.get_acc_data()
@@ -160,7 +160,7 @@ class BlunoBeetle(threading.Thread):
         self.ble_packet.unpack(packet)
         if self.crc_check() and self.packet_check(PacketType.DATA):
             self.send_default_packet(PacketType.ACK)
-            self.queue_packet(packet)
+            self.queue_packet(packet)    
 
             # for testing
             #self.print_test_data()
