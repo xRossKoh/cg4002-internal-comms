@@ -172,7 +172,7 @@ class BlunoBeetle(threading.Thread):
     def three_way_handshake(self):
         while not self.is_connected:
             self.send_default_packet(PacketType.HELLO)
-            #print("Initiated 3-way handshake with beetle {}...\r".format(self.beetle_id))
+            print("Initiated 3-way handshake with beetle {}...\r".format(self.beetle_id))
 
             start_time = time.perf_counter()
             tle = False
@@ -193,7 +193,7 @@ class BlunoBeetle(threading.Thread):
 
             # crc check and packet type check
             if not self.crc_check() or not self.packet_check(PacketType.HELLO):
-                #print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
+                print("3-way handshake with beetle {} failed.\r".format(self.beetle_id))
                 continue
 
             # else reply with ack
@@ -202,7 +202,7 @@ class BlunoBeetle(threading.Thread):
             # change connected state to true
             self.is_connected = True
 
-            #print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
+            print("3-way handshake with beetle {} complete.\r".format(self.beetle_id))
 
     def wait_for_data(self):
         try:
@@ -231,7 +231,7 @@ class BlunoBeetle(threading.Thread):
             self.disconnect()
             print("Beetle ID {} terminated".format(self.beetle_id))
         except Exception as e:
-            #print(e)
+            print(e)
             self.reconnect()
             self.wait_for_data()
 
