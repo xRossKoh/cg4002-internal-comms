@@ -14,4 +14,4 @@ class BlunoBeetleUDP(BlunoBeetle):
             self.queue_packet(packet)
 
             # for testing
-            self.print_test_data() 
+            #self.print_test_data() 
