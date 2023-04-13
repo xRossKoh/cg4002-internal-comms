@@ -231,7 +231,7 @@ class BlunoBeetle(threading.Thread):
             self.disconnect()
             print("Beetle ID {} terminated".format(self.beetle_id))
         except Exception as e:
-            print(e)
+            #print(e)
             self.reconnect()
             self.wait_for_data()
 
