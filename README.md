@@ -13,7 +13,7 @@ The scripts have been tested to work on Ubuntu Desktop 22.04 LTS with Python 3.1
 
 ## Setup
 1. Clone the repository.
-2. Download the "bluepy" library by following the installation instructions provided [here](https://github.com/IanHarvey/bluepy).
+2. Download the `bluepy` library by following the installation instructions provided [here](https://github.com/IanHarvey/bluepy).
 3. Download the `multipledispatch` library using the following command.
 
 ```
