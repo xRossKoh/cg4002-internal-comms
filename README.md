@@ -3,6 +3,7 @@
 
 This is part of a project to implement a 2-player laser tag system. 
 The scripts in this repository provide an API for the internal communications between the Bluno Beetles and a relay laptop.
+The full project can be found [here](https://github.com/Poopies99/CG4002-AR-Laser-Tag).
 
 This project uses the bluepy library by Ian Harvey as a Python interface for Bluetooth LE on Linux.
 The source code can be found [here](https://github.com/IanHarvey/bluepy).
